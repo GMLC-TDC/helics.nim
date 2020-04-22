@@ -10,27 +10,7 @@ skipDirs      = @["c2nim"]
 
 requires "nim >= 0.19.0"
 
-import ospaths, strutils
-
-proc getReleases() =
-  # TODO: get release number
-  # TODO: get release based on platform
-  exec("rm -rf c2nim HELICS.*.tar.gz")
-  exec("mkdir -p c2nim")
-
-  var filename = ""
-
-  exec("curl -LO https://github.com/JuliaBinaryWrappers/HELICS_jll.jl/releases/download/HELICS-v2.4.2%2B0/HELICS.v2.4.2.x86_64-apple-darwin14-cxx11.tar.gz")
-  filename = "HELICS.v2.4.2.x86_64-apple-darwin14-cxx11.tar.gz"
-  exec("tar -xvf " & filename & " -C c2nim")
-  exec("rm " & filename)
-
-  exec("curl -LO https://github.com/JuliaBinaryWrappers/ZeroMQ_jll.jl/releases/download/ZeroMQ-v4.3.2%2B2/ZeroMQ.v4.3.2.x86_64-apple-darwin14-cxx11.tar.gz")
-  filename = "ZeroMQ.v4.3.2.x86_64-apple-darwin14-cxx11.tar.gz"
-  exec("tar -xvf " & filename & " -C c2nim")
-  exec("rm " & filename)
-
-  exec("chmod -R +w c2nim")
+import os, strutils
 
 proc process(headerPath: string) =
   let content = readFile(headerPath)
@@ -51,7 +31,8 @@ proc processAll() =
   process("c2nim/include/helics/helics_enums.h")
 
 task download, "get releases from precompiled binaries":
-  getReleases()
+  exec("bbd download --package HELICS --install c2nim")
+  exec("chmod -R +w c2nim")
 
 task headers, "generate bindings from headers":
   processAll()
