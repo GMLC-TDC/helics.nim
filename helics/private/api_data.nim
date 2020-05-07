@@ -167,9 +167,9 @@ type
 ##
 
 type
-  helics_complex* {.bycopy.} = object
-    real*: cdouble
-    imag*: cdouble
+  helics_complex* {.importc: "helics_complex", header: "api-data.h", bycopy.} = object
+    real* {.importc: "real".}: cdouble
+    imag* {.importc: "imag".}: cdouble
 
 
 ## *
@@ -179,16 +179,16 @@ type
 ##
 
 type
-  helics_message* {.bycopy.} = object
-    time*: helics_time         ## !< message time
-    data*: cstring             ## !< message data
-    length*: int64_t           ## !< message length
-    messageID*: int32_t        ## !< message identification information
-    flags*: int16_t            ## !< flags related to the message
-    original_source*: cstring  ## !< original source
-    source*: cstring           ## !< the most recent source
-    dest*: cstring             ## !< the final destination
-    original_dest*: cstring    ## !< the original destination of the message
+  helics_message* {.importc: "helics_message", header: "api-data.h", bycopy.} = object
+    time* {.importc: "time".}: helics_time ## !< message time
+    data* {.importc: "data".}: cstring ## !< message data
+    length* {.importc: "length".}: int64_t ## !< message length
+    messageID* {.importc: "messageID".}: int32_t ## !< message identification information
+    flags* {.importc: "flags".}: int16_t ## !< flags related to the message
+    original_source* {.importc: "original_source".}: cstring ## !< original source
+    source* {.importc: "source".}: cstring ## !< the most recent source
+    dest* {.importc: "dest".}: cstring ## !< the final destination
+    original_dest* {.importc: "original_dest".}: cstring ## !< the original destination of the message
 
 
 ## *
@@ -199,6 +199,6 @@ type
 ##
 
 type
-  helics_error* {.bycopy.} = object
-    error_code*: int32_t       ## !< an error code associated with the error
-    message*: cstring          ## !< a message associated with the error
+  helics_error* {.importc: "helics_error", header: "api-data.h", bycopy.} = object
+    error_code* {.importc: "error_code".}: int32_t ## !< an error code associated with the error
+    message* {.importc: "message".}: cstring ## !< a message associated with the error

@@ -29,7 +29,7 @@ proc process(headerPath: string) =
   let (dir, headerFile, ext) = splitFile(headerPath)
   let headerFileSanitized = headerFile.replace('-', '_').camel2snake()
   let outPath = "helics/private" / headerFileSanitized.addFileExt("nim")
-  exec("c2nim --dynlib:helicsSharedLib --cdecl -o:" & outPath & " " & headerPath)
+  exec("c2nim --dynlib:helicsSharedLib --cdecl --header:'\"" & headerFile.addFileExt(".h") & "\"' -o:" & outPath & " " & headerPath)
 
 proc processAll() =
   exec("mkdir -p helics/private")
