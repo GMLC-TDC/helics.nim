@@ -12,10 +12,10 @@ when defined(linux) or defined(macosx):
     {.passL: """-Wl,-rpath,'$ORIGIN'""".}
 
 when defined(windows):
-  const helicsSharedLib* = "helicsSharedLib(|.2.5.0).dll"
+  const helicsSharedLib* = "helicsSharedLib.dll"
 elif defined(macosx):
-  const helicsSharedLib* = "libhelicsSharedLib(|.2.5.0).dylib"
+  const helicsSharedLib* = "libhelicsSharedLib.dylib"
 else:
-  const helicsSharedLib* = "libhelicsSharedLib(|.2.5.0).so"
+  const helicsSharedLib* = "libhelicsSharedLib.so"
 
 include private/helics
