@@ -5,6 +5,7 @@ author        = "Dheepak Krishnamurthy"
 description   = "Nim binding for HELICS"
 license       = "MIT"
 skipDirs      = @["c2nim"]
+srcDir        = "src"
 
 # Dependencies
 
@@ -28,7 +29,7 @@ proc process(headerPath: string) =
   writeFile(headerPath, content.replace("HELICS_DEPRECATED_EXPORT ", "").replace("HELICS_EXPORT ", ""))
   let (dir, headerFile, ext) = splitFile(headerPath)
   let headerFileSanitized = headerFile.replace('-', '_').camel2snake()
-  let outPath = "helics/private" / headerFileSanitized.addFileExt("nim")
+  let outPath = "src/private" / headerFileSanitized.addFileExt("nim")
   exec("c2nim --dynlib:helicsSharedLib --cdecl --header:'\"" & headerFile.addFileExt(".h") & "\"' -o:" & outPath & " " & headerPath)
 
 proc processAll() =
