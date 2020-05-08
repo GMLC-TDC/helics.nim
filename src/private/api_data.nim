@@ -10,13 +10,6 @@
 ##  @brief Data structures for the C api
 ##
 
-when defined(windows):
-  const helicsSharedLib* = "helicsSharedLib.dll"
-elif defined(macosx):
-  const helicsSharedLib* = "libhelicsSharedLib.dylib"
-else:
-  const helicsSharedLib* = "libhelicsSharedLib.so"
-
 include helics_enums
 
 ## *
