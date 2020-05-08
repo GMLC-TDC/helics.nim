@@ -1,3 +1,5 @@
+import os
+
 include private/helics
 
 const helics_install_path = getEnv("HELICS_INSTALL")
