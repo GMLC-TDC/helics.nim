@@ -1,5 +1,28 @@
 import os, strutils, strformat
 
+const helics_install_path = getEnv("HELICS_INSTALL")
+
+static:
+  putEnv("HELICS_INSTALL", helics_install_path)
+
+when defined(linux):
+  block:
+    {.passL: """-Wl,-rpath,'""" & helics_install_path & """./lib/'""".}
+    {.passL: """-Wl,-rpath,'$ORIGIN'""".}
+    {.passL: """-Wl,-rpath,'$ORIGIN/../lib/'""".}
+    {.passL: """-Wl,-rpath,'/usr/lib/'""".}
+    {.passL: """-Wl,-rpath,'/usr/local/lib/'""".}
+
+when defined(macosx):
+  block:
+    {.passL: """-Wl,-rpath,'""" & helics_install_path & """./lib/'""".}
+    {.passL: """-Wl,-rpath,'@loader_path'""".}
+    {.passL: """-Wl,-rpath,'@loader_path/../lib/'""".}
+    {.passL: """-Wl,-rpath,'@executable_path'""".}
+    {.passL: """-Wl,-rpath,'@executable_path/../lib/'""".}
+    {.passL: """-Wl,-rpath,'/usr/lib/'""".}
+    {.passL: """-Wl,-rpath,'/usr/local/lib/'""".}
+
 import nimterop/[cimport, build, paths]
 
 const
@@ -18,6 +41,7 @@ else:
 
 const dlUrl = &"https://github.com/GMLC-TDC/HELICS/releases/download/v{version}/{tarfile}.tar.gz"
 const folder = tarfile.replace("-shared", "")
+
 
 proc camel2snake*(s: string): string {.noSideEffect, procvar.} =
   ## CanBeFun => can_be_fun
