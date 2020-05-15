@@ -78,6 +78,10 @@ cPlugin:
       for s in substring:
         r.add(s.capitalizeAscii())
       sym.name = r
+    elif sym.kind == nskEnumField and sym.name.startsWith("helics"):
+      sym.name = sym.name.toUpper()
+    elif sym.kind == nskConst and sym.name.startsWith("helics"):
+      sym.name = sym.name.toUpper()
 
 when defined(Windows):
   const dynlibFile = "libhelicsSharedLib.dll"
