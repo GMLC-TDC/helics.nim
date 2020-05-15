@@ -7,19 +7,23 @@ static:
 
 when defined(linux):
   block:
-    {.passL: """-Wl,-rpath,'""" & helics_install_path & """./lib/'""".}
+    {.passL: """-Wl,-rpath,'""" & helics_install_path & """/lib/'""".}
     {.passL: """-Wl,-rpath,'$ORIGIN'""".}
+    {.passL: """-Wl,-rpath,'$ORIGIN/lib/'""".}
     {.passL: """-Wl,-rpath,'$ORIGIN/../lib/'""".}
+    {.passL: """-Wl,-rpath,'.'""".}
     {.passL: """-Wl,-rpath,'/usr/lib/'""".}
     {.passL: """-Wl,-rpath,'/usr/local/lib/'""".}
 
 when defined(macosx):
   block:
-    {.passL: """-Wl,-rpath,'""" & helics_install_path & """./lib/'""".}
+    {.passL: """-Wl,-rpath,'""" & helics_install_path & """/lib/'""".}
     {.passL: """-Wl,-rpath,'@loader_path'""".}
+    {.passL: """-Wl,-rpath,'@loader_path/lib/'""".}
     {.passL: """-Wl,-rpath,'@loader_path/../lib/'""".}
     {.passL: """-Wl,-rpath,'@executable_path'""".}
     {.passL: """-Wl,-rpath,'@executable_path/../lib/'""".}
+    {.passL: """-Wl,-rpath,'.'""".}
     {.passL: """-Wl,-rpath,'/usr/lib/'""".}
     {.passL: """-Wl,-rpath,'/usr/local/lib/'""".}
 
