@@ -63,5 +63,4 @@ elif defined(posix):
 else:
   static: doAssert false
 
-
 cImport(srcDir/folder/"/include/helics/chelics.h", recurse = true, dynlib = "dynlibFile")
