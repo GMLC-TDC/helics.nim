@@ -67,6 +67,10 @@ static:
     outDir = srcDir,
   )
 
+cOverride:
+  type
+    HelicsBool = bool
+
 cPlugin:
   import strutils
 
