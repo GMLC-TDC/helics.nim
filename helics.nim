@@ -8,7 +8,6 @@ static:
 when defined(linux):
   block:
     {.passL: """-Wl,-rpath,'""" & helics_install_path & """/lib/'""".}
-    {.passL: """-Wl,-rpath,'""" & helics_install_path & """/lib64'""".}
     {.passL: """-Wl,-rpath,'$ORIGIN'""".}
     {.passL: """-Wl,-rpath,'$ORIGIN/lib/'""".}
     {.passL: """-Wl,-rpath,'$ORIGIN/../lib/'""".}
@@ -100,4 +99,4 @@ elif defined(posix):
 else:
   static: doAssert false
 
-cImport(srcDir/folder/"/include/helics/chelics.h", recurse = true, flags="-f:ast2 --noHeader")
+cImport(srcDir/folder/"/include/helics/chelics.h", recurse = true, dynlib = "dynlibFile", flags="--noHeader")
