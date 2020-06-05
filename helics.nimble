@@ -8,4 +8,4 @@ license       = "MIT"
 # Dependencies
 
 requires "nim >= 1.2.0"
-requires "nimterop"
+requires "nimterop <= 0.5.7"

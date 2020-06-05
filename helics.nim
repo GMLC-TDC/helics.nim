@@ -100,4 +100,8 @@ elif defined(posix):
 else:
   static: doAssert false
 
-cImport(srcDir/folder/"/include/helics/chelics.h", recurse = true, dynlib = "dynlibFile", flags="-f:ast2 --noHeader")
+cImport(srcDir/folder/"/include/helics/chelics.h", recurse = true, flags="-f:ast2 --noHeader")
+
+  # helics_time_zero* {.importc, impchelicsDyn.}: HelicsTime ## ```
+  #                                                      ##   !< definition of time zero-the beginning of simulation
+  #                                                      ## ```
