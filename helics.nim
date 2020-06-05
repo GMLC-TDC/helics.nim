@@ -8,6 +8,7 @@ static:
 when defined(linux):
   block:
     {.passL: """-Wl,-rpath,'""" & helics_install_path & """/lib/'""".}
+    {.passL: """-Wl,-rpath,'""" & helics_install_path & """/lib64'""".}
     {.passL: """-Wl,-rpath,'$ORIGIN'""".}
     {.passL: """-Wl,-rpath,'$ORIGIN/lib/'""".}
     {.passL: """-Wl,-rpath,'$ORIGIN/../lib/'""".}
@@ -59,8 +60,8 @@ proc camel2snake*(s: string): string {.noSideEffect, procvar.} =
       result.add(s[i])
 
 static:
-  # cDebug()
-  # cDisableCaching()
+  cDebug()
+  cDisableCaching()
 
   downloadUrl(
     dlUrl,
