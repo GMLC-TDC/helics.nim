@@ -101,7 +101,3 @@ else:
   static: doAssert false
 
 cImport(srcDir/folder/"/include/helics/chelics.h", recurse = true, flags="-f:ast2 --noHeader")
-
-  # helics_time_zero* {.importc, impchelicsDyn.}: HelicsTime ## ```
-  #                                                      ##   !< definition of time zero-the beginning of simulation
-  #                                                      ## ```
