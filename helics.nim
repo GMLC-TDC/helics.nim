@@ -59,8 +59,8 @@ proc camel2snake*(s: string): string {.noSideEffect, procvar.} =
       result.add(s[i])
 
 static:
-  cDebug()
-  cDisableCaching()
+  # cDebug()
+  # cDisableCaching()
 
   downloadUrl(
     dlUrl,
