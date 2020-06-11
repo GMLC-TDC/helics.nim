@@ -91,9 +91,9 @@ when defined(Windows):
   const dynlibFile = "libhelicsSharedLib.dll"
 elif defined(posix):
   when defined(linux):
-    const dynlibFile = &"libhelicsSharedLib.so(.2.5)"
+    const dynlibFile = &"libhelicsSharedLib.so(.{version})"
   elif defined(osx):
-    const dynlibFile = &"libhelicsSharedLib(.2.5).dylib"
+    const dynlibFile = &"libhelicsSharedLib(.{version}).dylib"
   else:
     static: doAssert false
 else:
