@@ -34,7 +34,7 @@ const
 
   srcDir = baseDir/"helics"
 
-const version = "2.5.0"
+const version = "2.5.1"
 
 when defined(Windows):
   const tarfile = &"Helics-shared-{version}-win64"
