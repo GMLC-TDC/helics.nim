@@ -373,7 +373,7 @@ type
     sym: T
     loaded: bool
 
-  HelicsLibrary = ref object
+  HelicsLibrary* = ref object
     lib: LibHandle
     m_helicsGetVersion: ProcWrapper[proc (): cstring {.cdecl.}]
     m_helicsGetBuildFlags: ProcWrapper[proc (): cstring {.cdecl.}]
