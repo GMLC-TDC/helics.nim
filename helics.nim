@@ -10,7 +10,38 @@ else:
   import dynlib
 import macros
 import os
-import sequtils
+
+const helics_install_path = getEnv("HELICS_INSTALL")
+
+static:
+  putEnv("HELICS_INSTALL", helics_install_path)
+
+when defined(linux):
+  block:
+    {.passL: """-Wl,-rpath,'""" & helics_install_path & """/lib/'""".}
+    {.passL: """-Wl,-rpath,'$ORIGIN'""".}
+    {.passL: """-Wl,-rpath,'$ORIGIN/helics_install/lib'""".}
+    {.passL: """-Wl,-rpath,'$ORIGIN/lib/'""".}
+    {.passL: """-Wl,-rpath,'$ORIGIN/../lib/'""".}
+    {.passL: """-Wl,-rpath,'.'""".}
+    {.passL: """-Wl,-rpath,'/usr/lib/'""".}
+    {.passL: """-Wl,-rpath,'/usr/local/lib/'""".}
+
+when defined(macosx):
+  block:
+    {.passL: """-Wl,-rpath,'""" & helics_install_path & """/lib/'""".}
+    {.passL: """-Wl,-rpath,'@loader_path'""".}
+    {.passL: """-Wl,-rpath,'@loader_path/helics_install/lib'""".}
+    {.passL: """-Wl,-rpath,'@loader_path/lib/'""".}
+    {.passL: """-Wl,-rpath,'@loader_path/../lib/'""".}
+    {.passL: """-Wl,-rpath,'@executable_path'""".}
+    {.passL: """-Wl,-rpath,'@executable_path/lib/'""".}
+    {.passL: """-Wl,-rpath,'@executable_path/helics_install/lib'""".}
+    {.passL: """-Wl,-rpath,'@executable_path/../lib/'""".}
+    {.passL: """-Wl,-rpath,'.'""".}
+    {.passL: """-Wl,-rpath,'/usr/lib/'""".}
+    {.passL: """-Wl,-rpath,'/usr/local/lib/'""".}
+
 
 when defined(posix):
   # use own loadLib implementation that uses RTLD_LAZY instead of RTLD_NOW to
@@ -975,7 +1006,7 @@ proc helicsBrokerAddSourceFilterToEndpoint*(l: HelicsLibrary, broker: HelicsBrok
 #  * @param[in,out] err A helics_error object, can be NULL if the errors are to be ignored.
 #  * @endforcpponly
 #
-proc helicsBrokerAddDestinationFilterToEndpoint*(l: HelicsLibrary, broker: HelicsBroker, filter: cstring, endpoint: cstring, err: ptr HelicsError) =
+proc helicsBrokerAddDestinationFilterToEndpoint*(l: HelicsLibrary, broker: HelicsBroker, filter: string, endpoint: string) =
   loadSym("helicsBrokerAddDestinationFilterToEndpoint")
   let err = l.helicsErrorInitialize()
   f(broker, filter.cstring, endpoint.cstring, unsafeAddr err)
@@ -1055,7 +1086,7 @@ proc helicsCoreIsConnected*(l: HelicsLibrary, core: HelicsCore): HelicsBool =
 #  * @param[in,out] err A helics_error object, can be NULL if the errors are to be ignored.
 #  * @endforcpponly
 #
-proc helicsCoreDataLink*(l: HelicsLibrary, core: HelicsCore, source: string, target: string, err: ptr HelicsError) =
+proc helicsCoreDataLink*(l: HelicsLibrary, core: HelicsCore, source: string, target: string) =
   loadSym("helicsCoreDataLink")
   let err = l.helicsErrorInitialize()
   f(core, source.cstring, target.cstring, unsafeAddr err)
@@ -1072,7 +1103,7 @@ proc helicsCoreDataLink*(l: HelicsLibrary, core: HelicsCore, source: string, tar
 #  * @param[in,out] err A helics_error object, can be NULL if the errors are to be ignored.
 #  * @endforcpponly
 #
-proc helicsCoreAddSourceFilterToEndpoint*(l: HelicsLibrary, core: HelicsCore, filter: cstring, endpoint: cstring, err: ptr HelicsError) =
+proc helicsCoreAddSourceFilterToEndpoint*(l: HelicsLibrary, core: HelicsCore, filter: string, endpoint: string) =
   loadSym("helicsCoreAddSourceFilterToEndpoint")
   let err = l.helicsErrorInitialize()
   f(core, filter.cstring, endpoint.cstring, unsafeAddr err)
@@ -1089,7 +1120,7 @@ proc helicsCoreAddSourceFilterToEndpoint*(l: HelicsLibrary, core: HelicsCore, fi
 #  * @param[in,out] err A helics_error object, can be NULL if the errors are to be ignored.
 #  * @endforcpponly
 #
-proc helicsCoreAddDestinationFilterToEndpoint*(l: HelicsLibrary, core: HelicsCore, filter: string, endpoint: string, err: ptr HelicsError) =
+proc helicsCoreAddDestinationFilterToEndpoint*(l: HelicsLibrary, core: HelicsCore, filter: string, endpoint: string) =
   loadSym("helicsCoreAddDestinationFilterToEndpoint")
   let err = l.helicsErrorInitialize()
   f(core, filter.cstring, endpoint.cstring, unsafeAddr err)
@@ -1105,7 +1136,7 @@ proc helicsCoreAddDestinationFilterToEndpoint*(l: HelicsLibrary, core: HelicsCor
 #  * @param[in,out] err A helics_error object, can be NULL if the errors are to be ignored.
 #  * @endforcpponly
 #
-proc helicsCoreMakeConnections*(l: HelicsLibrary, core: HelicsCore, file: string, err: ptr HelicsError) =
+proc helicsCoreMakeConnections*(l: HelicsLibrary, core: HelicsCore, file: string) =
   loadSym("helicsCoreMakeConnections")
   let err = l.helicsErrorInitialize()
   f(core, file.cstring, unsafeAddr err)
@@ -1540,7 +1571,7 @@ proc helicsFederateInfoSetBrokerInitString*(l: HelicsLibrary, fi: HelicsFederate
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsFederateInfoSetCoreType*(l: HelicsLibrary, fi: HelicsFederateInfo, coretype: cint) =
+proc helicsFederateInfoSetCoreType*(l: HelicsLibrary, fi: HelicsFederateInfo, coretype: int) =
   loadSym("helicsFederateInfoSetCoreType")
   let err = l.helicsErrorInitialize()
   f(fi, coretype.cint, unsafeAddr err)
@@ -1757,7 +1788,7 @@ proc helicsFederateInfoSetIntegerProperty*(l: HelicsLibrary, fi: HelicsFederateI
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsFederateRegisterInterfaces*(l: HelicsLibrary, fed: HelicsFederate, file: string, err: ptr HelicsError) =
+proc helicsFederateRegisterInterfaces*(l: HelicsLibrary, fed: HelicsFederate, file: string) =
   loadSym("helicsFederateRegisterInterfaces")
   let err = l.helicsErrorInitialize()
   f(fed, file.cstring, unsafeAddr err)
@@ -1793,7 +1824,7 @@ proc helicsFederateLocalError*(l: HelicsLibrary, fed: HelicsFederate, error_code
 # *
 #  * Finalize the federate. This function halts all communication in the federate and disconnects it from the core.
 #
-proc helicsFederateFinalize*(l: HelicsLibrary, fed: HelicsFederate, err: ptr HelicsError) =
+proc helicsFederateFinalize*(l: HelicsLibrary, fed: HelicsFederate) =
   loadSym("helicsFederateFinalize")
   let err = l.helicsErrorInitialize()
   f(fed, unsafeAddr err)
@@ -1803,7 +1834,7 @@ proc helicsFederateFinalize*(l: HelicsLibrary, fed: HelicsFederate, err: ptr Hel
 # *
 #  * Finalize the federate in an async call.
 #
-proc helicsFederateFinalizeAsync*(l: HelicsLibrary, fed: HelicsFederate, err: ptr HelicsError) =
+proc helicsFederateFinalizeAsync*(l: HelicsLibrary, fed: HelicsFederate) =
   loadSym("helicsFederateFinalizeAsync")
   let err = l.helicsErrorInitialize()
   f(fed, unsafeAddr err)
@@ -1813,7 +1844,7 @@ proc helicsFederateFinalizeAsync*(l: HelicsLibrary, fed: HelicsFederate, err: pt
 # *
 #  * Complete the asynchronous finalize call.
 #
-proc helicsFederateFinalizeComplete*(l: HelicsLibrary, fed: HelicsFederate, err: ptr HelicsError) =
+proc helicsFederateFinalizeComplete*(l: HelicsLibrary, fed: HelicsFederate) =
   loadSym("helicsFederateFinalizeComplete")
   let err = l.helicsErrorInitialize()
   f(fed, unsafeAddr err)
@@ -1849,7 +1880,7 @@ proc helicsCloseLibrary*(l: HelicsLibrary) =
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsFederateEnterInitializingMode*(l: HelicsLibrary, fed: HelicsFederate, err: ptr HelicsError) =
+proc helicsFederateEnterInitializingMode*(l: HelicsLibrary, fed: HelicsFederate) =
   loadSym("helicsFederateEnterInitializingMode")
   let err = l.helicsErrorInitialize()
   f(fed, unsafeAddr err)
@@ -1866,7 +1897,7 @@ proc helicsFederateEnterInitializingMode*(l: HelicsLibrary, fed: HelicsFederate,
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsFederateEnterInitializingModeAsync*(l: HelicsLibrary, fed: HelicsFederate, err: ptr HelicsError) =
+proc helicsFederateEnterInitializingModeAsync*(l: HelicsLibrary, fed: HelicsFederate) =
   loadSym("helicsFederateEnterInitializingModeAsync")
   let err = l.helicsErrorInitialize()
   f(fed, unsafeAddr err)
@@ -1883,7 +1914,7 @@ proc helicsFederateEnterInitializingModeAsync*(l: HelicsLibrary, fed: HelicsFede
 #  *
 #  * @return helics_false if not completed, helics_true if completed.
 #
-proc helicsFederateIsAsyncOperationCompleted*(l: HelicsLibrary, fed: HelicsFederate, err: ptr HelicsError): HelicsBool =
+proc helicsFederateIsAsyncOperationCompleted*(l: HelicsLibrary, fed: HelicsFederate): HelicsBool =
   loadSym("helicsFederateIsAsyncOperationCompleted")
   let err = l.helicsErrorInitialize()
   result = f(fed, unsafeAddr err)
@@ -1898,7 +1929,7 @@ proc helicsFederateIsAsyncOperationCompleted*(l: HelicsLibrary, fed: HelicsFeder
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsFederateEnterInitializingModeComplete*(l: HelicsLibrary, fed: HelicsFederate, err: ptr HelicsError) =
+proc helicsFederateEnterInitializingModeComplete*(l: HelicsLibrary, fed: HelicsFederate) =
   loadSym("helicsFederateEnterInitializingModeComplete")
   let err = l.helicsErrorInitialize()
   f(fed, unsafeAddr err)
@@ -1916,7 +1947,7 @@ proc helicsFederateEnterInitializingModeComplete*(l: HelicsLibrary, fed: HelicsF
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsFederateEnterExecutingMode*(l: HelicsLibrary, fed: HelicsFederate, err: ptr HelicsError) =
+proc helicsFederateEnterExecutingMode*(l: HelicsLibrary, fed: HelicsFederate) =
   loadSym("helicsFederateEnterExecutingMode")
   let err = l.helicsErrorInitialize()
   f(fed, unsafeAddr err)
@@ -1934,7 +1965,7 @@ proc helicsFederateEnterExecutingMode*(l: HelicsLibrary, fed: HelicsFederate, er
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsFederateEnterExecutingModeAsync*(l: HelicsLibrary, fed: HelicsFederate, err: ptr HelicsError) =
+proc helicsFederateEnterExecutingModeAsync*(l: HelicsLibrary, fed: HelicsFederate) =
   loadSym("helicsFederateEnterExecutingModeAsync")
   let err = l.helicsErrorInitialize()
   f(fed, unsafeAddr err)
@@ -1949,7 +1980,7 @@ proc helicsFederateEnterExecutingModeAsync*(l: HelicsLibrary, fed: HelicsFederat
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsFederateEnterExecutingModeComplete*(l: HelicsLibrary, fed: HelicsFederate, err: ptr HelicsError) =
+proc helicsFederateEnterExecutingModeComplete*(l: HelicsLibrary, fed: HelicsFederate) =
   loadSym("helicsFederateEnterExecutingModeComplete")
   let err = l.helicsErrorInitialize()
   f(fed, unsafeAddr err)
@@ -1970,7 +2001,7 @@ proc helicsFederateEnterExecutingModeComplete*(l: HelicsLibrary, fed: HelicsFede
 #  *
 #  * @return An iteration structure with field containing the time and iteration status.
 #
-proc helicsFederateEnterExecutingModeIterative*(l: HelicsLibrary, fed: HelicsFederate, iterate: HelicsIterationRequest, err: ptr HelicsError): HelicsIterationResult =
+proc helicsFederateEnterExecutingModeIterative*(l: HelicsLibrary, fed: HelicsFederate, iterate: HelicsIterationRequest): HelicsIterationResult =
   loadSym("helicsFederateEnterExecutingModeIterative")
   let err = l.helicsErrorInitialize()
   result = f(fed, iterate, unsafeAddr err)
@@ -2006,7 +2037,7 @@ proc helicsFederateEnterExecutingModeIterativeAsync*(l: HelicsLibrary, fed: Heli
 #  *
 #  * @return An iteration object containing the iteration time and iteration_status.
 #
-proc helicsFederateEnterExecutingModeIterativeComplete*(l: HelicsLibrary, fed: HelicsFederate, err: ptr HelicsError): HelicsIterationResult =
+proc helicsFederateEnterExecutingModeIterativeComplete*(l: HelicsLibrary, fed: HelicsFederate): HelicsIterationResult =
   loadSym("helicsFederateEnterExecutingModeIterativeComplete")
   let err = l.helicsErrorInitialize()
   result = f(fed, unsafeAddr err)
@@ -2023,7 +2054,7 @@ proc helicsFederateEnterExecutingModeIterativeComplete*(l: HelicsLibrary, fed: H
 #  *
 #  * @return State the resulting state if void return helics_ok.
 #
-proc helicsFederateGetState*(l: HelicsLibrary, fed: HelicsFederate, err: ptr HelicsError): HelicsFederateState =
+proc helicsFederateGetState*(l: HelicsLibrary, fed: HelicsFederate): HelicsFederateState =
   loadSym("helicsFederateGetState")
   let err = l.helicsErrorInitialize()
   result = f(fed, unsafeAddr err)
@@ -2040,7 +2071,7 @@ proc helicsFederateGetState*(l: HelicsLibrary, fed: HelicsFederate, err: ptr Hel
 #  *
 #  * @return A core object, nullptr if invalid.
 #
-proc helicsFederateGetCoreObject*(l: HelicsLibrary, fed: HelicsFederate, err: ptr HelicsError): HelicsCore =
+proc helicsFederateGetCoreObject*(l: HelicsLibrary, fed: HelicsFederate): HelicsCore =
   loadSym("helicsFederateGetCoreObject")
   let err = l.helicsErrorInitialize()
   result = f(fed, unsafeAddr err)
@@ -2058,7 +2089,7 @@ proc helicsFederateGetCoreObject*(l: HelicsLibrary, fed: HelicsFederate, err: pt
 #  *
 #  * @return The time granted to the federate, will return helics_time_maxtime if the simulation has terminated or is invalid.
 #
-proc helicsFederateRequestTime*(l: HelicsLibrary, fed: HelicsFederate, requestTime: HelicsTime, err: ptr HelicsError): HelicsTime =
+proc helicsFederateRequestTime*(l: HelicsLibrary, fed: HelicsFederate, requestTime: HelicsTime): HelicsTime =
   loadSym("helicsFederateRequestTime")
   let err = l.helicsErrorInitialize()
   result = f(fed, requestTime, unsafeAddr err)
@@ -2076,7 +2107,7 @@ proc helicsFederateRequestTime*(l: HelicsLibrary, fed: HelicsFederate, requestTi
 #  *
 #  * @return The time granted to the federate, will return helics_time_maxtime if the simulation has terminated or is invalid
 #
-proc helicsFederateRequestTimeAdvance*(l: HelicsLibrary, fed: HelicsFederate, timeDelta: HelicsTime, err: ptr HelicsError): HelicsTime =
+proc helicsFederateRequestTimeAdvance*(l: HelicsLibrary, fed: HelicsFederate, timeDelta: HelicsTime): HelicsTime =
   loadSym("helicsFederateRequestTimeAdvance")
   let err = l.helicsErrorInitialize()
   result = f(fed, timeDelta, unsafeAddr err)
@@ -2096,7 +2127,7 @@ proc helicsFederateRequestTimeAdvance*(l: HelicsLibrary, fed: HelicsFederate, ti
 #  *
 #  * @return The time granted to the federate, will return helics_time_maxtime if the simulation has terminated or is invalid
 #
-proc helicsFederateRequestNextStep*(l: HelicsLibrary, fed: HelicsFederate, err: ptr HelicsError): HelicsTime =
+proc helicsFederateRequestNextStep*(l: HelicsLibrary, fed: HelicsFederate): HelicsTime =
   loadSym("helicsFederateRequestNextStep")
   let err = l.helicsErrorInitialize()
   result = f(fed, unsafeAddr err)
@@ -2124,7 +2155,7 @@ proc helicsFederateRequestNextStep*(l: HelicsLibrary, fed: HelicsFederate, err: 
 #  * This function also returns the iteration specification of the result.
 #  * @endPythonOnly
 #
-proc helicsFederateRequestTimeIterative*(l: HelicsLibrary, fed: HelicsFederate, requestTime: HelicsTime, iterate: HelicsIterationRequest, outIteration: ptr HelicsIterationResult, err: ptr HelicsError): HelicsTime =
+proc helicsFederateRequestTimeIterative*(l: HelicsLibrary, fed: HelicsFederate, requestTime: HelicsTime, iterate: HelicsIterationRequest, outIteration: ptr HelicsIterationResult): HelicsTime =
   loadSym("helicsFederateRequestTimeIterative")
   let err = l.helicsErrorInitialize()
   result = f(fed, requestTime, iterate, outIteration, unsafeAddr err)
@@ -2142,7 +2173,7 @@ proc helicsFederateRequestTimeIterative*(l: HelicsLibrary, fed: HelicsFederate, 
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsFederateRequestTimeAsync*(l: HelicsLibrary, fed: HelicsFederate, requestTime: HelicsTime, err: ptr HelicsError) =
+proc helicsFederateRequestTimeAsync*(l: HelicsLibrary, fed: HelicsFederate, requestTime: HelicsTime) =
   loadSym("helicsFederateRequestTimeAsync")
   let err = l.helicsErrorInitialize()
   f(fed, requestTime, unsafeAddr err)
@@ -2159,7 +2190,7 @@ proc helicsFederateRequestTimeAsync*(l: HelicsLibrary, fed: HelicsFederate, requ
 #  *
 #  * @return The time granted to the federate, will return helics_time_maxtime if the simulation has terminated.
 #
-proc helicsFederateRequestTimeComplete*(l: HelicsLibrary, fed: HelicsFederate, err: ptr HelicsError): HelicsTime =
+proc helicsFederateRequestTimeComplete*(l: HelicsLibrary, fed: HelicsFederate): HelicsTime =
   loadSym("helicsFederateRequestTimeComplete")
   let err = l.helicsErrorInitialize()
   result = f(fed, unsafeAddr err)
@@ -2179,7 +2210,7 @@ proc helicsFederateRequestTimeComplete*(l: HelicsLibrary, fed: HelicsFederate, e
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsFederateRequestTimeIterativeAsync*(l: HelicsLibrary, fed: HelicsFederate, requestTime: HelicsTime, iterate: HelicsIterationRequest, err: ptr HelicsError) =
+proc helicsFederateRequestTimeIterativeAsync*(l: HelicsLibrary, fed: HelicsFederate, requestTime: HelicsTime, iterate: HelicsIterationRequest) =
   loadSym("helicsFederateRequestTimeIterativeAsync")
   let err = l.helicsErrorInitialize()
   f(fed, requestTime, iterate, unsafeAddr err)
@@ -2200,7 +2231,7 @@ proc helicsFederateRequestTimeIterativeAsync*(l: HelicsLibrary, fed: HelicsFeder
 #  * This function also returns the iteration specification of the result.
 #  * @endPythonOnly
 #
-proc helicsFederateRequestTimeIterativeComplete*(l: HelicsLibrary, fed: HelicsFederate, outIterate: ptr HelicsIterationResult, err: ptr HelicsError): HelicsTime =
+proc helicsFederateRequestTimeIterativeComplete*(l: HelicsLibrary, fed: HelicsFederate, outIterate: ptr HelicsIterationResult): HelicsTime =
   loadSym("helicsFederateRequestTimeIterativeComplete")
   let err = l.helicsErrorInitialize()
   result = f(fed, outIterate, unsafeAddr err)
@@ -2228,7 +2259,7 @@ proc helicsFederateGetName*(l: HelicsLibrary, fed: HelicsFederate): string =
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsFederateSetTimeProperty*(l: HelicsLibrary, fed: HelicsFederate, timeProperty: int, time: HelicsTime, err: ptr HelicsError) =
+proc helicsFederateSetTimeProperty*(l: HelicsLibrary, fed: HelicsFederate, timeProperty: int, time: HelicsTime) =
   loadSym("helicsFederateSetTimeProperty")
   let err = l.helicsErrorInitialize()
   f(fed, timeProperty.cint, time, unsafeAddr err)
@@ -2245,7 +2276,7 @@ proc helicsFederateSetTimeProperty*(l: HelicsLibrary, fed: HelicsFederate, timeP
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsFederateSetFlagOption*(l: HelicsLibrary, fed: HelicsFederate, flag: int, flagValue: HelicsBool, err: ptr HelicsError) =
+proc helicsFederateSetFlagOption*(l: HelicsLibrary, fed: HelicsFederate, flag: int, flagValue: HelicsBool) =
   loadSym("helicsFederateSetFlagOption")
   let err = l.helicsErrorInitialize()
   f(fed, flag.cint, flagValue, unsafeAddr err)
@@ -2264,7 +2295,7 @@ proc helicsFederateSetFlagOption*(l: HelicsLibrary, fed: HelicsFederate, flag: i
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsFederateSetSeparator*(l: HelicsLibrary, fed: HelicsFederate, separator: char, err: ptr HelicsError) =
+proc helicsFederateSetSeparator*(l: HelicsLibrary, fed: HelicsFederate, separator: char) =
   loadSym("helicsFederateSetSeparator")
   let err = l.helicsErrorInitialize()
   f(fed, separator.cchar, unsafeAddr err)
@@ -2281,7 +2312,7 @@ proc helicsFederateSetSeparator*(l: HelicsLibrary, fed: HelicsFederate, separato
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsFederateSetIntegerProperty*(l: HelicsLibrary, fed: HelicsFederate, intProperty: int, propertyVal: int, err: ptr HelicsError) =
+proc helicsFederateSetIntegerProperty*(l: HelicsLibrary, fed: HelicsFederate, intProperty: int, propertyVal: int) =
   loadSym("helicsFederateSetIntegerProperty")
   let err = l.helicsErrorInitialize()
   f(fed, intProperty.cint, propertyVal.cint, unsafeAddr err)
@@ -2297,7 +2328,7 @@ proc helicsFederateSetIntegerProperty*(l: HelicsLibrary, fed: HelicsFederate, in
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsFederateGetTimeProperty*(l: HelicsLibrary, fed: HelicsFederate, timeProperty: int, err: ptr HelicsError): HelicsTime =
+proc helicsFederateGetTimeProperty*(l: HelicsLibrary, fed: HelicsFederate, timeProperty: int): HelicsTime =
   loadSym("helicsFederateGetTimeProperty")
   let err = l.helicsErrorInitialize()
   result = f(fed, timeProperty.cint, unsafeAddr err)
@@ -2315,7 +2346,7 @@ proc helicsFederateGetTimeProperty*(l: HelicsLibrary, fed: HelicsFederate, timeP
 #  *
 #  * @return The value of the flag.
 #
-proc helicsFederateGetFlagOption*(l: HelicsLibrary, fed: HelicsFederate, flag: int, err: ptr HelicsError): HelicsBool =
+proc helicsFederateGetFlagOption*(l: HelicsLibrary, fed: HelicsFederate, flag: int): HelicsBool =
   loadSym("helicsFederateGetFlagOption")
   let err = l.helicsErrorInitialize()
   result = f(fed, flag.cint, unsafeAddr err)
@@ -2333,7 +2364,7 @@ proc helicsFederateGetFlagOption*(l: HelicsLibrary, fed: HelicsFederate, flag: i
 #  *
 #  * @return The value of the property.
 #
-proc helicsFederateGetIntegerProperty*(l: HelicsLibrary, fed: HelicsFederate, intProperty: int, err: ptr HelicsError): cint =
+proc helicsFederateGetIntegerProperty*(l: HelicsLibrary, fed: HelicsFederate, intProperty: int): int =
   loadSym("helicsFederateGetIntegerProperty")
   let err = l.helicsErrorInitialize()
   result = f(fed, intProperty.cint, unsafeAddr err)
@@ -2350,7 +2381,7 @@ proc helicsFederateGetIntegerProperty*(l: HelicsLibrary, fed: HelicsFederate, in
 #  *
 #  * @return The current time of the federate.
 #
-proc helicsFederateGetCurrentTime*(l: HelicsLibrary, fed: HelicsFederate, err: ptr HelicsError): HelicsTime =
+proc helicsFederateGetCurrentTime*(l: HelicsLibrary, fed: HelicsFederate): HelicsTime =
   loadSym("helicsFederateGetCurrentTime")
   let err = l.helicsErrorInitialize()
   result = f(fed, unsafeAddr err)
@@ -2368,7 +2399,7 @@ proc helicsFederateGetCurrentTime*(l: HelicsLibrary, fed: HelicsFederate, err: p
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsFederateSetGlobal*(l: HelicsLibrary, fed: HelicsFederate, valueName: string, value: string, err: ptr HelicsError) =
+proc helicsFederateSetGlobal*(l: HelicsLibrary, fed: HelicsFederate, valueName: string, value: string) =
   loadSym("helicsFederateSetGlobal")
   let err = l.helicsErrorInitialize()
   f(fed, valueName.cstring, value.cstring, unsafeAddr err)
@@ -2384,7 +2415,7 @@ proc helicsFederateSetGlobal*(l: HelicsLibrary, fed: HelicsFederate, valueName: 
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsFederateAddDependency*(l: HelicsLibrary, fed: HelicsFederate, fedName: string, err: ptr HelicsError) =
+proc helicsFederateAddDependency*(l: HelicsLibrary, fed: HelicsFederate, fedName: string) =
   loadSym("helicsFederateAddDependency")
   let err = l.helicsErrorInitialize()
   f(fed, fedName.cstring, unsafeAddr err)
@@ -2400,7 +2431,7 @@ proc helicsFederateAddDependency*(l: HelicsLibrary, fed: HelicsFederate, fedName
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsFederateSetLogFile*(l: HelicsLibrary, fed: HelicsFederate, logFile: string, err: ptr HelicsError) =
+proc helicsFederateSetLogFile*(l: HelicsLibrary, fed: HelicsFederate, logFile: string) =
   loadSym("helicsFederateSetLogFile")
   let err = l.helicsErrorInitialize()
   f(fed, logFile.cstring, unsafeAddr err)
@@ -2416,7 +2447,7 @@ proc helicsFederateSetLogFile*(l: HelicsLibrary, fed: HelicsFederate, logFile: s
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsFederateLogErrorMessage*(l: HelicsLibrary, fed: HelicsFederate, logmessage: string, err: ptr HelicsError) =
+proc helicsFederateLogErrorMessage*(l: HelicsLibrary, fed: HelicsFederate, logmessage: string) =
   loadSym("helicsFederateLogErrorMessage")
   let err = l.helicsErrorInitialize()
   f(fed, logmessage.cstring, unsafeAddr err)
@@ -2432,7 +2463,7 @@ proc helicsFederateLogErrorMessage*(l: HelicsLibrary, fed: HelicsFederate, logme
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsFederateLogWarningMessage*(l: HelicsLibrary, fed: HelicsFederate, logmessage: string, err: ptr HelicsError) =
+proc helicsFederateLogWarningMessage*(l: HelicsLibrary, fed: HelicsFederate, logmessage: string) =
   loadSym("helicsFederateLogWarningMessage")
   let err = l.helicsErrorInitialize()
   f(fed, logmessage.cstring, unsafeAddr err)
@@ -2448,7 +2479,7 @@ proc helicsFederateLogWarningMessage*(l: HelicsLibrary, fed: HelicsFederate, log
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsFederateLogInfoMessage*(l: HelicsLibrary, fed: HelicsFederate, logmessage: string, err: ptr HelicsError) =
+proc helicsFederateLogInfoMessage*(l: HelicsLibrary, fed: HelicsFederate, logmessage: string) =
   loadSym("helicsFederateLogInfoMessage")
   let err = l.helicsErrorInitialize()
   f(fed, logmessage.cstring, unsafeAddr err)
@@ -2464,7 +2495,7 @@ proc helicsFederateLogInfoMessage*(l: HelicsLibrary, fed: HelicsFederate, logmes
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsFederateLogDebugMessage*(l: HelicsLibrary, fed: HelicsFederate, logmessage: string, err: ptr HelicsError) =
+proc helicsFederateLogDebugMessage*(l: HelicsLibrary, fed: HelicsFederate, logmessage: string) =
   loadSym("helicsFederateLogDebugMessage")
   let err = l.helicsErrorInitialize()
   f(fed, logmessage.cstring, unsafeAddr err)
@@ -2481,7 +2512,7 @@ proc helicsFederateLogDebugMessage*(l: HelicsLibrary, fed: HelicsFederate, logme
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsFederateLogLevelMessage*(l: HelicsLibrary, fed: HelicsFederate, loglevel: int, logmessage: string, err: ptr HelicsError) =
+proc helicsFederateLogLevelMessage*(l: HelicsLibrary, fed: HelicsFederate, loglevel: int, logmessage: string) =
   loadSym("helicsFederateLogLevelMessage")
   let err = l.helicsErrorInitialize()
   f(fed, loglevel.cint, logmessage.cstring, unsafeAddr err)
@@ -2500,7 +2531,7 @@ proc helicsFederateLogLevelMessage*(l: HelicsLibrary, fed: HelicsFederate, logle
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsCoreSetGlobal*(l: HelicsLibrary, core: HelicsCore, valueName: string, value: string, err: ptr HelicsError) =
+proc helicsCoreSetGlobal*(l: HelicsLibrary, core: HelicsCore, valueName: string, value: string) =
   loadSym("helicsCoreSetGlobal")
   let err = l.helicsErrorInitialize()
   f(core, valueName.cstring, value.cstring, unsafeAddr err)
@@ -2519,7 +2550,7 @@ proc helicsCoreSetGlobal*(l: HelicsLibrary, core: HelicsCore, valueName: string,
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsBrokerSetGlobal*(l: HelicsLibrary, broker: HelicsBroker, valueName: string, value: string, err: ptr HelicsError) =
+proc helicsBrokerSetGlobal*(l: HelicsLibrary, broker: HelicsBroker, valueName: string, value: string) =
   loadSym("helicsBrokerSetGlobal")
   let err = l.helicsErrorInitialize()
   f(broker, valueName.cstring, value.cstring, unsafeAddr err)
@@ -2535,7 +2566,7 @@ proc helicsBrokerSetGlobal*(l: HelicsLibrary, broker: HelicsBroker, valueName: s
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsCoreSetLogFile*(l: HelicsLibrary, core: HelicsCore, logFileName: string, err: ptr HelicsError) =
+proc helicsCoreSetLogFile*(l: HelicsLibrary, core: HelicsCore, logFileName: string) =
   loadSym("helicsCoreSetLogFile")
   let err = l.helicsErrorInitialize()
   f(core, logFileName.cstring, unsafeAddr err)
@@ -2551,7 +2582,7 @@ proc helicsCoreSetLogFile*(l: HelicsLibrary, core: HelicsCore, logFileName: stri
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsBrokerSetLogFile*(l: HelicsLibrary, broker: HelicsBroker, logFileName: string, err: ptr HelicsError) =
+proc helicsBrokerSetLogFile*(l: HelicsLibrary, broker: HelicsBroker, logFileName: string) =
   loadSym("helicsBrokerSetLogFile")
   let err = l.helicsErrorInitialize()
   f(broker, logFileName.cstring, unsafeAddr err)
@@ -2587,7 +2618,7 @@ proc helicsCreateQuery*(l: HelicsLibrary, target: string, query: string): Helics
 #  * invalid.
 #  * @endforcpponly
 #
-proc helicsQueryExecute*(l: HelicsLibrary, query: HelicsQuery, fed: HelicsFederate, err: ptr HelicsError): string =
+proc helicsQueryExecute*(l: HelicsLibrary, query: HelicsQuery, fed: HelicsFederate): string =
   loadSym("helicsQueryExecute")
   let err = l.helicsErrorInitialize()
   result = $(f(query, fed, unsafeAddr err))
@@ -2611,7 +2642,7 @@ proc helicsQueryExecute*(l: HelicsLibrary, query: HelicsQuery, fed: HelicsFedera
 #  * invalid.
 #  * @endforcpponly
 #
-proc helicsQueryCoreExecute*(l: HelicsLibrary, query: HelicsQuery, core: HelicsCore, err: ptr HelicsError): string =
+proc helicsQueryCoreExecute*(l: HelicsLibrary, query: HelicsQuery, core: HelicsCore): string =
   loadSym("helicsQueryCoreExecute")
   let err = l.helicsErrorInitialize()
   result = $(f(query, core, unsafeAddr err))
@@ -2635,7 +2666,7 @@ proc helicsQueryCoreExecute*(l: HelicsLibrary, query: HelicsQuery, core: HelicsC
 #  * invalid
 #  * @endforcpponly
 #
-proc helicsQueryBrokerExecute*(l: HelicsLibrary, query: HelicsQuery, broker: HelicsBroker, err: ptr HelicsError): string =
+proc helicsQueryBrokerExecute*(l: HelicsLibrary, query: HelicsQuery, broker: HelicsBroker): string =
   loadSym("helicsQueryBrokerExecute")
   let err = l.helicsErrorInitialize()
   result = $(f(query, broker, unsafeAddr err))
@@ -2651,7 +2682,7 @@ proc helicsQueryBrokerExecute*(l: HelicsLibrary, query: HelicsQuery, broker: Hel
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsQueryExecuteAsync*(l: HelicsLibrary, query: HelicsQuery, fed: HelicsFederate, err: ptr HelicsError) =
+proc helicsQueryExecuteAsync*(l: HelicsLibrary, query: HelicsQuery, fed: HelicsFederate) =
   loadSym("helicsQueryExecuteAsync")
   let err = l.helicsErrorInitialize()
   f(query, fed, unsafeAddr err)
@@ -2674,7 +2705,7 @@ proc helicsQueryExecuteAsync*(l: HelicsLibrary, query: HelicsQuery, fed: HelicsF
 #  *         The return will be nullptr if query is an invalid object
 #  * @endforcpponly
 #
-proc helicsQueryExecuteComplete*(l: HelicsLibrary, query: HelicsQuery, err: ptr HelicsError): string =
+proc helicsQueryExecuteComplete*(l: HelicsLibrary, query: HelicsQuery): string =
   loadSym("helicsQueryExecuteComplete")
   let err = l.helicsErrorInitialize()
   result = $(f(query, unsafeAddr err))
@@ -2705,7 +2736,7 @@ proc helicsQueryIsCompleted*(l: HelicsLibrary, query: HelicsQuery): HelicsBool =
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsQuerySetTarget*(l: HelicsLibrary, query: HelicsQuery, target: string, err: ptr HelicsError) =
+proc helicsQuerySetTarget*(l: HelicsLibrary, query: HelicsQuery, target: string) =
   loadSym("helicsQuerySetTarget")
   let err = l.helicsErrorInitialize()
   f(query, target.cstring, unsafeAddr err)
@@ -2721,7 +2752,7 @@ proc helicsQuerySetTarget*(l: HelicsLibrary, query: HelicsQuery, target: string,
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsQuerySetQueryString*(l: HelicsLibrary, query: HelicsQuery, queryString: string, err: ptr HelicsError) =
+proc helicsQuerySetQueryString*(l: HelicsLibrary, query: HelicsQuery, queryString: string) =
   loadSym("helicsQuerySetQueryString")
   let err = l.helicsErrorInitialize()
   f(query, queryString.cstring, unsafeAddr err)
@@ -2764,7 +2795,7 @@ proc helicsCleanupLibrary*(l: HelicsLibrary) =
 #  *         nullptr on failure.
 #  * @endforcpponly
 #
-proc helicsFederateRegisterEndpoint*(l: HelicsLibrary, fed: HelicsFederate, name: string, `type`: string, err: ptr HelicsError): HelicsEndpoint =
+proc helicsFederateRegisterEndpoint*(l: HelicsLibrary, fed: HelicsFederate, name: string, `type`: string): HelicsEndpoint =
   loadSym("helicsFederateRegisterEndpoint")
   let err = l.helicsErrorInitialize()
   result = f(fed, name.cstring, `type`.cstring, unsafeAddr err)
@@ -2789,7 +2820,7 @@ proc helicsFederateRegisterEndpoint*(l: HelicsLibrary, fed: HelicsFederate, name
 #  *         nullptr on failure.
 #  * @endforcpponly
 #
-proc helicsFederateRegisterGlobalEndpoint*(l: HelicsLibrary, fed: HelicsFederate, name: string, `type`: string, err: ptr HelicsError): HelicsEndpoint =
+proc helicsFederateRegisterGlobalEndpoint*(l: HelicsLibrary, fed: HelicsFederate, name: string, `type`: string): HelicsEndpoint =
   loadSym("helicsFederateRegisterGlobalEndpoint")
   let err = l.helicsErrorInitialize()
   result = f(fed, name.cstring, `type`.cstring, unsafeAddr err)
@@ -2810,7 +2841,7 @@ proc helicsFederateRegisterGlobalEndpoint*(l: HelicsLibrary, fed: HelicsFederate
 #  *         The object will not be valid and err will contain an error code if no endpoint with the specified name exists.
 #  * @endforcpponly
 #
-proc helicsFederateGetEndpoint*(l: HelicsLibrary, fed: HelicsFederate, name: string, err: ptr HelicsError): HelicsEndpoint =
+proc helicsFederateGetEndpoint*(l: HelicsLibrary, fed: HelicsFederate, name: string): HelicsEndpoint =
   loadSym("helicsFederateGetEndpoint")
   let err = l.helicsErrorInitialize()
   result = f(fed, name, unsafeAddr err)
@@ -2831,7 +2862,7 @@ proc helicsFederateGetEndpoint*(l: HelicsLibrary, fed: HelicsFederate, name: str
 #  *         It will be NULL if given an invalid index.
 #  * @endforcpponly
 #
-proc helicsFederateGetEndpointByIndex*(l: HelicsLibrary, fed: HelicsFederate, index: int, err: ptr HelicsError): HelicsEndpoint =
+proc helicsFederateGetEndpointByIndex*(l: HelicsLibrary, fed: HelicsFederate, index: int): HelicsEndpoint =
   loadSym("helicsFederateGetEndpointByIndex")
   let err = l.helicsErrorInitialize()
   result = f(fed, index.cint, unsafeAddr err)
@@ -2858,7 +2889,7 @@ proc helicsEndpointIsValid*(l: HelicsLibrary, endpoint: HelicsEndpoint): HelicsB
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsEndpointSetDefaultDestination*(l: HelicsLibrary, endpoint: HelicsEndpoint, dest: string, err: ptr HelicsError) =
+proc helicsEndpointSetDefaultDestination*(l: HelicsLibrary, endpoint: HelicsEndpoint, dest: string) =
   loadSym("helicsEndpointSetDefaultDestination")
   let err = l.helicsErrorInitialize()
   f(endpoint, dest.cstring, unsafeAddr err)
@@ -2893,7 +2924,7 @@ proc helicsEndpointGetDefaultDestination*(l: HelicsLibrary, endpoint: HelicsEndp
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsEndpointSendMessageRaw*(l: HelicsLibrary, endpoint: HelicsEndpoint, dest: string, data: pointer, inputDataLength: int, err: ptr HelicsError) =
+proc helicsEndpointSendMessageRaw*(l: HelicsLibrary, endpoint: HelicsEndpoint, dest: string, data: pointer, inputDataLength: int) =
   loadSym("helicsEndpointSendMessageRaw")
   let err = l.helicsErrorInitialize()
   f(endpoint, dest.cstring, data, inputDataLength.cint, unsafeAddr err)
@@ -2920,7 +2951,7 @@ proc helicsEndpointSendMessageRaw*(l: HelicsLibrary, endpoint: HelicsEndpoint, d
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsEndpointSendEventRaw*(l: HelicsLibrary, endpoint: HelicsEndpoint, dest: string, data: pointer, inputDataLength: int, time: HelicsTime, err: ptr HelicsError) =
+proc helicsEndpointSendEventRaw*(l: HelicsLibrary, endpoint: HelicsEndpoint, dest: string, data: pointer, inputDataLength: int, time: HelicsTime) =
   loadSym("helicsEndpointSendEventRaw")
   let err = l.helicsErrorInitialize()
   f(endpoint, dest.cstring, data, inputDataLength.cint, time, unsafeAddr err)
@@ -2936,7 +2967,7 @@ proc helicsEndpointSendEventRaw*(l: HelicsLibrary, endpoint: HelicsEndpoint, des
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsEndpointSendMessage*(l: HelicsLibrary, endpoint: HelicsEndpoint, message: ptr HelicsMessage, err: ptr HelicsError) =
+proc helicsEndpointSendMessage*(l: HelicsLibrary, endpoint: HelicsEndpoint, message: ptr HelicsMessage) =
   loadSym("helicsEndpointSendMessage")
   let err = l.helicsErrorInitialize()
   f(endpoint, message, unsafeAddr err)
@@ -2952,7 +2983,7 @@ proc helicsEndpointSendMessage*(l: HelicsLibrary, endpoint: HelicsEndpoint, mess
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsEndpointSendMessageObject*(l: HelicsLibrary, endpoint: HelicsEndpoint, message: HelicsMessageObject, err: ptr HelicsError) =
+proc helicsEndpointSendMessageObject*(l: HelicsLibrary, endpoint: HelicsEndpoint, message: HelicsMessageObject) =
   loadSym("helicsEndpointSendMessageObject")
   let err = l.helicsErrorInitialize()
   f(endpoint, message, unsafeAddr err)
@@ -2969,7 +3000,7 @@ proc helicsEndpointSendMessageObject*(l: HelicsLibrary, endpoint: HelicsEndpoint
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsEndpointSendMessageObjectZeroCopy*(l: HelicsLibrary, endpoint: HelicsEndpoint, message: HelicsMessageObject, err: ptr HelicsError) =
+proc helicsEndpointSendMessageObjectZeroCopy*(l: HelicsLibrary, endpoint: HelicsEndpoint, message: HelicsMessageObject) =
   loadSym("helicsEndpointSendMessageObjectZeroCopy")
   let err = l.helicsErrorInitialize()
   f(endpoint, message, unsafeAddr err)
@@ -2986,7 +3017,7 @@ proc helicsEndpointSendMessageObjectZeroCopy*(l: HelicsLibrary, endpoint: Helics
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsEndpointSubscribe*(l: HelicsLibrary, endpoint: HelicsEndpoint, key: string, err: ptr HelicsError) =
+proc helicsEndpointSubscribe*(l: HelicsLibrary, endpoint: HelicsEndpoint, key: string) =
   loadSym("helicsEndpointSubscribe")
   let err = l.helicsErrorInitialize()
   f(endpoint, key, unsafeAddr err)
@@ -3070,7 +3101,7 @@ proc helicsEndpointGetMessageObject*(l: HelicsLibrary, endpoint: HelicsEndpoint)
 #  *
 #  * @return A new helics_message_object.
 #
-proc helicsEndpointCreateMessageObject*(l: HelicsLibrary, endpoint: HelicsEndpoint, err: ptr HelicsError): HelicsMessageObject =
+proc helicsEndpointCreateMessageObject*(l: HelicsLibrary, endpoint: HelicsEndpoint): HelicsMessageObject =
   loadSym("helicsEndpointCreateMessageObject")
   let err = l.helicsErrorInitialize()
   result = f(endpoint, unsafeAddr err)
@@ -3118,7 +3149,7 @@ proc helicsFederateGetMessageObject*(l: HelicsLibrary, fed: HelicsFederate): Hel
 #  *
 #  * @return A helics_message_object containing the message data.
 #
-proc helicsFederateCreateMessageObject*(l: HelicsLibrary, fed: HelicsFederate, err: ptr HelicsError): HelicsMessageObject =
+proc helicsFederateCreateMessageObject*(l: HelicsLibrary, fed: HelicsFederate): HelicsMessageObject =
   loadSym("helicsFederateCreateMessageObject")
   let err = l.helicsErrorInitialize()
   result = f(fed, unsafeAddr err)
@@ -3202,7 +3233,7 @@ proc helicsEndpointGetInfo*(l: HelicsLibrary, endpoint: HelicsEndpoint): string 
 #  * @param[in,out] err An error object to fill out in case of an error.
 #  * @endforcpponly
 #
-proc helicsEndpointSetInfo*(l: HelicsLibrary, endpoint: HelicsEndpoint, info: string, err: ptr HelicsError) =
+proc helicsEndpointSetInfo*(l: HelicsLibrary, endpoint: HelicsEndpoint, info: string) =
   loadSym("helicsEndpointSetInfo")
   let err = l.helicsErrorInitialize()
   f(endpoint, info.cstring, unsafeAddr err)
@@ -3219,7 +3250,7 @@ proc helicsEndpointSetInfo*(l: HelicsLibrary, endpoint: HelicsEndpoint, info: st
 #  * @param[in,out] err An error object to fill out in case of an error.
 #  * @endforcpponly
 #
-proc helicsEndpointSetOption*(l: HelicsLibrary, endpoint: HelicsEndpoint, option: int, value: int, err: ptr HelicsError) =
+proc helicsEndpointSetOption*(l: HelicsLibrary, endpoint: HelicsEndpoint, option: int, value: int) =
   loadSym("helicsEndpointSetOption")
   let err = l.helicsErrorInitialize()
   f(endpoint, option.cint, value.cint, unsafeAddr err)
@@ -3395,7 +3426,7 @@ proc helicsMessageIsValid*(l: HelicsLibrary, message: HelicsMessageObject): Heli
 #  * @param[in,out] err An error object to fill out in case of an error.
 #  * @endforcpponly
 #
-proc helicsMessageSetSource*(l: HelicsLibrary, message: HelicsMessageObject, src: string, err: ptr HelicsError) =
+proc helicsMessageSetSource*(l: HelicsLibrary, message: HelicsMessageObject, src: string) =
   loadSym("helicsMessageSetSource")
   let err = l.helicsErrorInitialize()
   f(message, src.cstring, unsafeAddr err)
@@ -3411,7 +3442,7 @@ proc helicsMessageSetSource*(l: HelicsLibrary, message: HelicsMessageObject, src
 #  * @param[in,out] err An error object to fill out in case of an error.
 #  * @endforcpponly
 #
-proc helicsMessageSetDestination*(l: HelicsLibrary, message: HelicsMessageObject, dest: string, err: ptr HelicsError) =
+proc helicsMessageSetDestination*(l: HelicsLibrary, message: HelicsMessageObject, dest: string) =
   loadSym("helicsMessageSetDestination")
   let err = l.helicsErrorInitialize()
   f(message, dest.cstring, unsafeAddr err)
@@ -3427,7 +3458,7 @@ proc helicsMessageSetDestination*(l: HelicsLibrary, message: HelicsMessageObject
 #  * @param[in,out] err An error object to fill out in case of an error.
 #  * @endforcpponly
 #
-proc helicsMessageSetOriginalSource*(l: HelicsLibrary, message: HelicsMessageObject, src: string, err: ptr HelicsError) =
+proc helicsMessageSetOriginalSource*(l: HelicsLibrary, message: HelicsMessageObject, src: string) =
   loadSym("helicsMessageSetOriginalSource")
   let err = l.helicsErrorInitialize()
   f(message, src.cstring, unsafeAddr err)
@@ -3443,7 +3474,7 @@ proc helicsMessageSetOriginalSource*(l: HelicsLibrary, message: HelicsMessageObj
 #  * @param[in,out] err An error object to fill out in case of an error.
 #  * @endforcpponly
 #
-proc helicsMessageSetOriginalDestination*(l: HelicsLibrary, message: HelicsMessageObject, dest: string, err: ptr HelicsError) =
+proc helicsMessageSetOriginalDestination*(l: HelicsLibrary, message: HelicsMessageObject, dest: string) =
   loadSym("helicsMessageSetOriginalDestination")
   let err = l.helicsErrorInitialize()
   f(message, dest.cstring, unsafeAddr err)
@@ -3459,7 +3490,7 @@ proc helicsMessageSetOriginalDestination*(l: HelicsLibrary, message: HelicsMessa
 #  * @param[in,out] err An error object to fill out in case of an error.
 #  * @endforcpponly
 #
-proc helicsMessageSetTime*(l: HelicsLibrary, message: HelicsMessageObject, time: HelicsTime, err: ptr HelicsError) =
+proc helicsMessageSetTime*(l: HelicsLibrary, message: HelicsMessageObject, time: HelicsTime) =
   loadSym("helicsMessageSetTime")
   let err = l.helicsErrorInitialize()
   f(message, time, unsafeAddr err)
@@ -3478,7 +3509,7 @@ proc helicsMessageSetTime*(l: HelicsLibrary, message: HelicsMessageObject, time:
 #  * @param[in,out] err An error object to fill out in case of an error.
 #  * @endforcpponly
 #
-proc helicsMessageResize*(l: HelicsLibrary, message: HelicsMessageObject, newSize: int, err: ptr HelicsError) =
+proc helicsMessageResize*(l: HelicsLibrary, message: HelicsMessageObject, newSize: int) =
   loadSym("helicsMessageResize")
   let err = l.helicsErrorInitialize()
   f(message, newSize.cint, unsafeAddr err)
@@ -3496,7 +3527,7 @@ proc helicsMessageResize*(l: HelicsLibrary, message: HelicsMessageObject, newSiz
 #  * @param[in,out] err An error object to fill out in case of an error.
 #  * @endforcpponly
 #
-proc helicsMessageReserve*(l: HelicsLibrary, message: HelicsMessageObject, reserveSize: int, err: ptr HelicsError) =
+proc helicsMessageReserve*(l: HelicsLibrary, message: HelicsMessageObject, reserveSize: int) =
   loadSym("helicsMessageReserve")
   let err = l.helicsErrorInitialize()
   f(message, reserveSize.cint, unsafeAddr err)
@@ -3514,7 +3545,7 @@ proc helicsMessageReserve*(l: HelicsLibrary, message: HelicsMessageObject, reser
 #  * @param[in,out] err An error object to fill out in case of an error.
 #  * @endforcpponly
 #
-proc helicsMessageSetMessageID*(l: HelicsLibrary, message: HelicsMessageObject, messageID: int32, err: ptr HelicsError) =
+proc helicsMessageSetMessageID*(l: HelicsLibrary, message: HelicsMessageObject, messageID: int32) =
   loadSym("helicsMessageSetMessageID")
   let err = l.helicsErrorInitialize()
   f(message, messageID.cint, unsafeAddr err)
@@ -3540,7 +3571,7 @@ proc helicsMessageClearFlags*(l: HelicsLibrary, message: HelicsMessageObject) =
 #  * @param[in,out] err An error object to fill out in case of an error.
 #  * @endforcpponly
 #
-proc helicsMessageSetFlagOption*(l: HelicsLibrary, message: HelicsMessageObject, flag: int, flagValue: HelicsBool, err: ptr HelicsError) =
+proc helicsMessageSetFlagOption*(l: HelicsLibrary, message: HelicsMessageObject, flag: int, flagValue: HelicsBool) =
   loadSym("helicsMessageSetFlagOption")
   let err = l.helicsErrorInitialize()
   f(message, flag.cint, flagValue, unsafeAddr err)
@@ -3556,7 +3587,7 @@ proc helicsMessageSetFlagOption*(l: HelicsLibrary, message: HelicsMessageObject,
 #  * @param[in,out] err An error object to fill out in case of an error.
 #  * @endforcpponly
 #
-proc helicsMessageSetString*(l: HelicsLibrary, message: HelicsMessageObject, str: string, err: ptr HelicsError) =
+proc helicsMessageSetString*(l: HelicsLibrary, message: HelicsMessageObject, str: string) =
   loadSym("helicsMessageSetString")
   let err = l.helicsErrorInitialize()
   f(message, str.cstring, unsafeAddr err)
@@ -3573,7 +3604,7 @@ proc helicsMessageSetString*(l: HelicsLibrary, message: HelicsMessageObject, str
 #  * @param[in,out] err An error object to fill out in case of an error.
 #  * @endforcpponly
 #
-proc helicsMessageSetData*(l: HelicsLibrary, message: HelicsMessageObject, data: pointer, inputDataLength: int, err: ptr HelicsError) =
+proc helicsMessageSetData*(l: HelicsLibrary, message: HelicsMessageObject, data: pointer, inputDataLength: int) =
   loadSym("helicsMessageSetData")
   let err = l.helicsErrorInitialize()
   f(message, data, inputDataLength.cint, unsafeAddr err)
@@ -3590,7 +3621,7 @@ proc helicsMessageSetData*(l: HelicsLibrary, message: HelicsMessageObject, data:
 #  * @param[in,out] err An error object to fill out in case of an error.
 #  * @endforcpponly
 #
-proc helicsMessageAppendData*(l: HelicsLibrary, message: HelicsMessageObject, data: pointer, inputDataLength: int, err: ptr HelicsError) =
+proc helicsMessageAppendData*(l: HelicsLibrary, message: HelicsMessageObject, data: pointer, inputDataLength: int) =
   loadSym("helicsMessageAppendData")
   let err = l.helicsErrorInitialize()
   f(message, data, inputDataLength.cint, unsafeAddr err)
@@ -3606,7 +3637,7 @@ proc helicsMessageAppendData*(l: HelicsLibrary, message: HelicsMessageObject, da
 #  * @param[in,out] err An error object to fill out in case of an error.
 #  * @endforcpponly
 #
-proc helicsMessageCopy*(l: HelicsLibrary, source_message: HelicsMessageObject, dest_message: HelicsMessageObject, err: ptr HelicsError) =
+proc helicsMessageCopy*(l: HelicsLibrary, source_message: HelicsMessageObject, dest_message: HelicsMessageObject) =
   loadSym("helicsMessageCopy")
   let err = l.helicsErrorInitialize()
   f(source_message, dest_message, unsafeAddr err)
@@ -3621,7 +3652,7 @@ proc helicsMessageCopy*(l: HelicsLibrary, source_message: HelicsMessageObject, d
 #  * @param[in,out] err An error object to fill out in case of an error.
 #  * @endforcpponly
 #
-proc helicsMessageClone*(l: HelicsLibrary, message: HelicsMessageObject, err: ptr HelicsError): HelicsMessageObject =
+proc helicsMessageClone*(l: HelicsLibrary, message: HelicsMessageObject): HelicsMessageObject =
   loadSym("helicsMessageClone")
   let err = l.helicsErrorInitialize()
   result = f(message, unsafeAddr err)
@@ -3665,7 +3696,7 @@ proc helicsMessageFree*(l: HelicsLibrary, message: HelicsMessageObject) =
 #  *
 #  * @return A helics_filter object.
 #
-proc helicsFederateRegisterFilter*(l: HelicsLibrary, fed: HelicsFederate, `type`: HelicsFilterType, name: string, err: ptr HelicsError): HelicsFilter =
+proc helicsFederateRegisterFilter*(l: HelicsLibrary, fed: HelicsFederate, `type`: HelicsFilterType, name: string): HelicsFilter =
   loadSym("helicsFederateRegisterFilter")
   let err = l.helicsErrorInitialize()
   result = f(fed, `type`, name.cstring, unsafeAddr err)
@@ -3687,7 +3718,7 @@ proc helicsFederateRegisterFilter*(l: HelicsLibrary, fed: HelicsFederate, `type`
 #  *
 #  * @return A helics_filter object.
 #
-proc helicsFederateRegisterGlobalFilter*(l: HelicsLibrary, fed: HelicsFederate, `type`: HelicsFilterType, name: string, err: ptr HelicsError): HelicsFilter =
+proc helicsFederateRegisterGlobalFilter*(l: HelicsLibrary, fed: HelicsFederate, `type`: HelicsFilterType, name: string): HelicsFilter =
   loadSym("helicsFederateRegisterGlobalFilter")
   let err = l.helicsErrorInitialize()
   result = f(fed, `type`, name.cstring, unsafeAddr err)
@@ -3708,7 +3739,7 @@ proc helicsFederateRegisterGlobalFilter*(l: HelicsLibrary, fed: HelicsFederate, 
 #  *
 #  * @return A helics_filter object.
 #
-proc helicsFederateRegisterCloningFilter*(l: HelicsLibrary, fed: HelicsFederate, name: string, err: ptr HelicsError): HelicsFilter =
+proc helicsFederateRegisterCloningFilter*(l: HelicsLibrary, fed: HelicsFederate, name: string): HelicsFilter =
   loadSym("helicsFederateRegisterCloningFilter")
   let err = l.helicsErrorInitialize()
   result = f(fed, name.cstring, unsafeAddr err)
@@ -3729,7 +3760,7 @@ proc helicsFederateRegisterCloningFilter*(l: HelicsLibrary, fed: HelicsFederate,
 #  *
 #  * @return A helics_filter object.
 #
-proc helicsFederateRegisterGlobalCloningFilter*(l: HelicsLibrary, fed: HelicsFederate, name: string, err: ptr HelicsError): HelicsFilter =
+proc helicsFederateRegisterGlobalCloningFilter*(l: HelicsLibrary, fed: HelicsFederate, name: string): HelicsFilter =
   loadSym("helicsFederateRegisterGlobalCloningFilter")
   let err = l.helicsErrorInitialize()
   result = f(fed, name.cstring, unsafeAddr err)
@@ -3751,7 +3782,7 @@ proc helicsFederateRegisterGlobalCloningFilter*(l: HelicsLibrary, fed: HelicsFed
 #  *
 #  * @return A helics_filter object.
 #
-proc helicsCoreRegisterFilter*(l: HelicsLibrary, core: HelicsCore, `type`: HelicsFilterType, name: string, err: ptr HelicsError): HelicsFilter =
+proc helicsCoreRegisterFilter*(l: HelicsLibrary, core: HelicsCore, `type`: HelicsFilterType, name: string): HelicsFilter =
   loadSym("helicsCoreRegisterFilter")
   let err = l.helicsErrorInitialize()
   result = f(core, `type`, name.cstring, unsafeAddr err)
@@ -3772,7 +3803,7 @@ proc helicsCoreRegisterFilter*(l: HelicsLibrary, core: HelicsCore, `type`: Helic
 #  *
 #  * @return A helics_filter object.
 #
-proc helicsCoreRegisterCloningFilter*(l: HelicsLibrary, core: HelicsCore, name: string, err: ptr HelicsError): HelicsFilter =
+proc helicsCoreRegisterCloningFilter*(l: HelicsLibrary, core: HelicsCore, name: string): HelicsFilter =
   loadSym("helicsCoreRegisterCloningFilter")
   let err = l.helicsErrorInitialize()
   result = f(core, name.cstring, unsafeAddr err)
@@ -3802,7 +3833,7 @@ proc helicsFederateGetFilterCount*(l: HelicsLibrary, fed: HelicsFederate): int =
 #  * @return A helics_filter object, the object will not be valid and err will contain an error code if no filter with the specified name
 #  * exists.
 #
-proc helicsFederateGetFilter*(l: HelicsLibrary, fed: HelicsFederate, name: string, err: ptr HelicsError): HelicsFilter =
+proc helicsFederateGetFilter*(l: HelicsLibrary, fed: HelicsFederate, name: string): HelicsFilter =
   loadSym("helicsFederateGetFilter")
   let err = l.helicsErrorInitialize()
   result = f(fed, name.cstring, unsafeAddr err)
@@ -3820,7 +3851,7 @@ proc helicsFederateGetFilter*(l: HelicsLibrary, fed: HelicsFederate, name: strin
 #  *
 #  * @return A helics_filter, which will be NULL if an invalid index is given.
 #
-proc helicsFederateGetFilterByIndex*(l: HelicsLibrary, fed: HelicsFederate, index: int, err: ptr HelicsError): HelicsFilter =
+proc helicsFederateGetFilterByIndex*(l: HelicsLibrary, fed: HelicsFederate, index: int): HelicsFilter =
   loadSym("helicsFederateGetFilterByIndex")
   let err = l.helicsErrorInitialize()
   result = f(fed, index.cint, unsafeAddr err)
@@ -3859,7 +3890,7 @@ proc helicsFilterGetName*(l: HelicsLibrary, filt: HelicsFilter): string =
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsFilterSet*(l: HelicsLibrary, filt: HelicsFilter, prop: string, val: float, err: ptr HelicsError) =
+proc helicsFilterSet*(l: HelicsLibrary, filt: HelicsFilter, prop: string, val: float) =
   loadSym("helicsFilterSet")
   let err = l.helicsErrorInitialize()
   f(filt, prop.cstring, val.cdouble, unsafeAddr err)
@@ -3876,7 +3907,7 @@ proc helicsFilterSet*(l: HelicsLibrary, filt: HelicsFilter, prop: string, val: f
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsFilterSetString*(l: HelicsLibrary, filt: HelicsFilter, prop: string, val: string, err: ptr HelicsError) =
+proc helicsFilterSetString*(l: HelicsLibrary, filt: HelicsFilter, prop: string, val: string) =
   loadSym("helicsFilterSetString")
   let err = l.helicsErrorInitialize()
   f(filt, prop.cstring, val.cstring, unsafeAddr err)
@@ -3893,7 +3924,7 @@ proc helicsFilterSetString*(l: HelicsLibrary, filt: HelicsFilter, prop: string, 
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsFilterAddDestinationTarget*(l: HelicsLibrary, filt: HelicsFilter, dest: string, err: ptr HelicsError) =
+proc helicsFilterAddDestinationTarget*(l: HelicsLibrary, filt: HelicsFilter, dest: string) =
   loadSym("helicsFilterAddDestinationTarget")
   let err = l.helicsErrorInitialize()
   f(filt, dest.cstring, unsafeAddr err)
@@ -3911,7 +3942,7 @@ proc helicsFilterAddDestinationTarget*(l: HelicsLibrary, filt: HelicsFilter, des
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsFilterAddSourceTarget*(l: HelicsLibrary, filt: HelicsFilter, source: string, err: ptr HelicsError) =
+proc helicsFilterAddSourceTarget*(l: HelicsLibrary, filt: HelicsFilter, source: string) =
   loadSym("helicsFilterAddSourceTarget")
   let err = l.helicsErrorInitialize()
   f(filt, source.cstring, unsafeAddr err)
@@ -3934,7 +3965,7 @@ proc helicsFilterAddSourceTarget*(l: HelicsLibrary, filt: HelicsFilter, source: 
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsFilterAddDeliveryEndpoint*(l: HelicsLibrary, filt: HelicsFilter, deliveryEndpoint: string, err: ptr HelicsError) =
+proc helicsFilterAddDeliveryEndpoint*(l: HelicsLibrary, filt: HelicsFilter, deliveryEndpoint: string) =
   loadSym("helicsFilterAddDeliveryEndpoint")
   let err = l.helicsErrorInitialize()
   f(filt, deliveryEndpoint.cstring, unsafeAddr err)
@@ -3951,7 +3982,7 @@ proc helicsFilterAddDeliveryEndpoint*(l: HelicsLibrary, filt: HelicsFilter, deli
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsFilterRemoveTarget*(l: HelicsLibrary, filt: HelicsFilter, target: string, err: ptr HelicsError) =
+proc helicsFilterRemoveTarget*(l: HelicsLibrary, filt: HelicsFilter, target: string) =
   loadSym("helicsFilterRemoveTarget")
   let err = l.helicsErrorInitialize()
   f(filt, target.cstring, unsafeAddr err)
@@ -3967,7 +3998,7 @@ proc helicsFilterRemoveTarget*(l: HelicsLibrary, filt: HelicsFilter, target: str
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsFilterRemoveDeliveryEndpoint*(l: HelicsLibrary, filt: HelicsFilter, deliveryEndpoint: string, err: ptr HelicsError) =
+proc helicsFilterRemoveDeliveryEndpoint*(l: HelicsLibrary, filt: HelicsFilter, deliveryEndpoint: string) =
   loadSym("helicsFilterRemoveDeliveryEndpoint")
   let err = l.helicsErrorInitialize()
   f(filt, deliveryEndpoint.cstring, unsafeAddr err)
@@ -3994,7 +4025,7 @@ proc helicsFilterGetInfo*(l: HelicsLibrary, filt: HelicsFilter): string =
 #  * @param[in,out] err An error object to fill out in case of an error.
 #  * @endforcpponly
 #
-proc helicsFilterSetInfo*(l: HelicsLibrary, filt: HelicsFilter, info: string, err: ptr HelicsError) =
+proc helicsFilterSetInfo*(l: HelicsLibrary, filt: HelicsFilter, info: string) =
   loadSym("helicsFilterSetInfo")
   let err = l.helicsErrorInitialize()
   f(filt, info.cstring, unsafeAddr err)
@@ -4011,7 +4042,7 @@ proc helicsFilterSetInfo*(l: HelicsLibrary, filt: HelicsFilter, info: string, er
 #  * @param[in,out] err An error object to fill out in case of an error.
 #  * @endforcpponly
 #
-proc helicsFilterSetOption*(l: HelicsLibrary, filt: HelicsFilter, option: int, value: int, err: ptr HelicsError) =
+proc helicsFilterSetOption*(l: HelicsLibrary, filt: HelicsFilter, option: int, value: int) =
   loadSym("helicsFilterSetOption")
   let err = l.helicsErrorInitialize()
   f(filt, option.cint, value.cint, unsafeAddr err)
@@ -4061,7 +4092,7 @@ proc helicsFilterGetOption*(l: HelicsLibrary, filt: HelicsFilter, option: int): 
 #  *
 #  * @return An object containing the subscription.
 #
-proc helicsFederateRegisterSubscription*(l: HelicsLibrary, fed: HelicsFederate, key: string, units: string, err: ptr HelicsError): HelicsInput =
+proc helicsFederateRegisterSubscription*(l: HelicsLibrary, fed: HelicsFederate, key: string, units: string): HelicsInput =
   loadSym("helicsFederateRegisterSubscription")
   let err = l.helicsErrorInitialize()
   result = f(fed, key.cstring, units.cstring, unsafeAddr err)
@@ -4084,7 +4115,7 @@ proc helicsFederateRegisterSubscription*(l: HelicsLibrary, fed: HelicsFederate, 
 #  *
 #  * @return An object containing the publication.
 #
-proc helicsFederateRegisterPublication*(l: HelicsLibrary, fed: HelicsFederate, key: string, `type`: HelicsDataType, units: string, err: ptr HelicsError): HelicsPublication =
+proc helicsFederateRegisterPublication*(l: HelicsLibrary, fed: HelicsFederate, key: string, `type`: HelicsDataType, units: string): HelicsPublication =
   loadSym("helicsFederateRegisterPublication")
   let err = l.helicsErrorInitialize()
   result = f(fed, key.cstring, `type`, units.cstring, unsafeAddr err)
@@ -4107,7 +4138,7 @@ proc helicsFederateRegisterPublication*(l: HelicsLibrary, fed: HelicsFederate, k
 #  *
 #  * @return An object containing the publication.
 #
-proc helicsFederateRegisterTypePublication*(l: HelicsLibrary, fed: HelicsFederate, key: string, `type`: string, units: string, err: ptr HelicsError): HelicsPublication =
+proc helicsFederateRegisterTypePublication*(l: HelicsLibrary, fed: HelicsFederate, key: string, `type`: string, units: string): HelicsPublication =
   loadSym("helicsFederateRegisterTypePublication")
   let err = l.helicsErrorInitialize()
   result = f(fed, key.cstring, `type`.cstring, units.cstring, unsafeAddr err)
@@ -4130,7 +4161,7 @@ proc helicsFederateRegisterTypePublication*(l: HelicsLibrary, fed: HelicsFederat
 #  *
 #  * @return An object containing the publication.
 #
-proc helicsFederateRegisterGlobalPublication*(l: HelicsLibrary, fed: HelicsFederate, key: string, `type`: HelicsDataType, units: string, err: ptr HelicsError): HelicsPublication =
+proc helicsFederateRegisterGlobalPublication*(l: HelicsLibrary, fed: HelicsFederate, key: string, `type`: HelicsDataType, units: string): HelicsPublication =
   loadSym("helicsFederateRegisterGlobalPublication")
   let err = l.helicsErrorInitialize()
   result = f(fed, key.cstring, `type`, units.cstring, unsafeAddr err)
@@ -4176,7 +4207,7 @@ proc helicsFederateRegisterGlobalTypePublication*(l: HelicsLibrary, fed: HelicsF
 #  *
 #  * @return An object containing the input.
 #
-proc helicsFederateRegisterInput*(l: HelicsLibrary, fed: HelicsFederate, key: string, `type`: HelicsDataType, units: string, err: ptr HelicsError): HelicsInput =
+proc helicsFederateRegisterInput*(l: HelicsLibrary, fed: HelicsFederate, key: string, `type`: HelicsDataType, units: string): HelicsInput =
   loadSym("helicsFederateRegisterInput")
   let err = l.helicsErrorInitialize()
   result = f(fed, key.cstring, `type`, units.cstring, unsafeAddr err)
@@ -4199,7 +4230,7 @@ proc helicsFederateRegisterInput*(l: HelicsLibrary, fed: HelicsFederate, key: st
 #  *
 #  * @return An object containing the publication.
 #
-proc helicsFederateRegisterTypeInput*(l: HelicsLibrary, fed: HelicsFederate, key: string, `type`: string, units: string, err: ptr HelicsError): HelicsInput =
+proc helicsFederateRegisterTypeInput*(l: HelicsLibrary, fed: HelicsFederate, key: string, `type`: string, units: string): HelicsInput =
   loadSym("helicsFederateRegisterTypeInput")
   let err = l.helicsErrorInitialize()
   result = f(fed, key.cstring, `type`.cstring, units.cstring, unsafeAddr err)
@@ -4222,7 +4253,7 @@ proc helicsFederateRegisterTypeInput*(l: HelicsLibrary, fed: HelicsFederate, key
 #  *
 #  * @return An object containing the publication.
 #
-proc helicsFederateRegisterGlobalInput*(l: HelicsLibrary, fed: HelicsFederate, key: string, `type`: HelicsDataType, units: string, err: ptr HelicsError): HelicsPublication =
+proc helicsFederateRegisterGlobalInput*(l: HelicsLibrary, fed: HelicsFederate, key: string, `type`: HelicsDataType, units: string): HelicsPublication =
   loadSym("helicsFederateRegisterGlobalInput")
   let err = l.helicsErrorInitialize()
   result = f(fed, key.cstring, `type`, units.cstring, unsafeAddr err)
@@ -4245,7 +4276,7 @@ proc helicsFederateRegisterGlobalInput*(l: HelicsLibrary, fed: HelicsFederate, k
 #  *
 #  * @return An object containing the publication.
 #
-proc helicsFederateRegisterGlobalTypeInput*(l: HelicsLibrary, fed: HelicsFederate, key: string, `type`: string, units: string, err: ptr HelicsError): HelicsPublication =
+proc helicsFederateRegisterGlobalTypeInput*(l: HelicsLibrary, fed: HelicsFederate, key: string, `type`: string, units: string): HelicsPublication =
   loadSym("helicsFederateRegisterGlobalTypeInput")
   let err = l.helicsErrorInitialize()
   result = f(fed, key.cstring, `type`.cstring, units.cstring, unsafeAddr err)
@@ -4264,7 +4295,7 @@ proc helicsFederateRegisterGlobalTypeInput*(l: HelicsLibrary, fed: HelicsFederat
 #  * @return A helics_publication object, the object will not be valid and err will contain an error code if no publication with the
 #  * specified key exists.
 #
-proc helicsFederateGetPublication*(l: HelicsLibrary, fed: HelicsFederate, key: string, err: ptr HelicsError): HelicsPublication =
+proc helicsFederateGetPublication*(l: HelicsLibrary, fed: HelicsFederate, key: string): HelicsPublication =
   loadSym("helicsFederateGetPublication")
   let err = l.helicsErrorInitialize()
   result = f(fed, key.cstring, unsafeAddr err)
@@ -4282,7 +4313,7 @@ proc helicsFederateGetPublication*(l: HelicsLibrary, fed: HelicsFederate, key: s
 #  *
 #  * @return A helics_publication.
 #
-proc helicsFederateGetPublicationByIndex*(l: HelicsLibrary, fed: HelicsFederate, index: int, err: ptr HelicsError): HelicsPublication =
+proc helicsFederateGetPublicationByIndex*(l: HelicsLibrary, fed: HelicsFederate, index: int): HelicsPublication =
   loadSym("helicsFederateGetPublicationByIndex")
   let err = l.helicsErrorInitialize()
   result = f(fed, index.cint, unsafeAddr err)
@@ -4301,7 +4332,7 @@ proc helicsFederateGetPublicationByIndex*(l: HelicsLibrary, fed: HelicsFederate,
 #  * @return A helics_input object, the object will not be valid and err will contain an error code if no input with the specified
 #  * key exists.
 #
-proc helicsFederateGetInput*(l: HelicsLibrary, fed: HelicsFederate, key: string, err: ptr HelicsError): HelicsInput =
+proc helicsFederateGetInput*(l: HelicsLibrary, fed: HelicsFederate, key: string): HelicsInput =
   loadSym("helicsFederateGetInput")
   let err = l.helicsErrorInitialize()
   result = f(fed, key.cstring, unsafeAddr err)
@@ -4319,7 +4350,7 @@ proc helicsFederateGetInput*(l: HelicsLibrary, fed: HelicsFederate, key: string,
 #  *
 #  * @return A helics_input, which will be NULL if an invalid index.
 #
-proc helicsFederateGetInputByIndex*(l: HelicsLibrary, fed: HelicsFederate, index: int, err: ptr HelicsError): HelicsInput =
+proc helicsFederateGetInputByIndex*(l: HelicsLibrary, fed: HelicsFederate, index: int): HelicsInput =
   loadSym("helicsFederateGetInputByIndex")
   let err = l.helicsErrorInitialize()
   result = f(fed, index.cint, unsafeAddr err)
@@ -4338,7 +4369,7 @@ proc helicsFederateGetInputByIndex*(l: HelicsLibrary, fed: HelicsFederate, index
 #  * @return A helics_input object, the object will not be valid and err will contain an error code if no input with the specified
 #  * key exists.
 #
-proc helicsFederateGetSubscription*(l: HelicsLibrary, fed: HelicsFederate, key: string, err: ptr HelicsError): HelicsInput =
+proc helicsFederateGetSubscription*(l: HelicsLibrary, fed: HelicsFederate, key: string): HelicsInput =
   loadSym("helicsFederateGetSubscription")
   let err = l.helicsErrorInitialize()
   result = f(fed, key.cstring, unsafeAddr err)
@@ -4365,7 +4396,7 @@ proc helicsFederateClearUpdates*(l: HelicsLibrary, fed: HelicsFederate) =
 #  *
 #  * @details This would be the same JSON that would be used to publish data.
 #
-proc helicsFederateRegisterFromPublicationJSON*(l: HelicsLibrary, fed: HelicsFederate, json: string, err: ptr HelicsError) =
+proc helicsFederateRegisterFromPublicationJSON*(l: HelicsLibrary, fed: HelicsFederate, json: string) =
   loadSym("helicsFederateRegisterFromPublicationJSON")
   let err = l.helicsErrorInitialize()
   f(fed, json.cstring, unsafeAddr err)
@@ -4381,7 +4412,7 @@ proc helicsFederateRegisterFromPublicationJSON*(l: HelicsLibrary, fed: HelicsFed
 #  * @param[in,out] err The error object to complete if there is an error.
 #  * @endforcpponly
 #
-proc helicsFederatePublishJSON*(l: HelicsLibrary, fed: HelicsFederate, json: string, err: ptr HelicsError) =
+proc helicsFederatePublishJSON*(l: HelicsLibrary, fed: HelicsFederate, json: string) =
   loadSym("helicsFederatePublishJSON")
   let err = l.helicsErrorInitialize()
   f(fed, json.cstring, unsafeAddr err)
@@ -4416,7 +4447,7 @@ proc helicsPublicationIsValid*(l: HelicsLibrary, pub: HelicsPublication): Helics
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsPublicationPublishRaw*(l: HelicsLibrary, pub: HelicsPublication, data: pointer, inputDataLength: int, err: ptr HelicsError) =
+proc helicsPublicationPublishRaw*(l: HelicsLibrary, pub: HelicsPublication, data: pointer, inputDataLength: int) =
   loadSym("helicsPublicationPublishRaw")
   let err = l.helicsErrorInitialize()
   f(pub, data, inputDataLength.cint, unsafeAddr err)
@@ -4432,7 +4463,7 @@ proc helicsPublicationPublishRaw*(l: HelicsLibrary, pub: HelicsPublication, data
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsPublicationPublishString*(l: HelicsLibrary, pub: HelicsPublication, str: string, err: ptr HelicsError) =
+proc helicsPublicationPublishString*(l: HelicsLibrary, pub: HelicsPublication, str: string) =
   loadSym("helicsPublicationPublishString")
   let err = l.helicsErrorInitialize()
   f(pub, str.cstring, unsafeAddr err)
@@ -4448,7 +4479,7 @@ proc helicsPublicationPublishString*(l: HelicsLibrary, pub: HelicsPublication, s
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsPublicationPublishInteger*(l: HelicsLibrary, pub: HelicsPublication, val: int64, err: ptr HelicsError) =
+proc helicsPublicationPublishInteger*(l: HelicsLibrary, pub: HelicsPublication, val: int64) =
   loadSym("helicsPublicationPublishInteger")
   let err = l.helicsErrorInitialize()
   f(pub, val.int64, unsafeAddr err)
@@ -4464,7 +4495,7 @@ proc helicsPublicationPublishInteger*(l: HelicsLibrary, pub: HelicsPublication, 
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsPublicationPublishBoolean*(l: HelicsLibrary, pub: HelicsPublication, val: HelicsBool, err: ptr HelicsError) =
+proc helicsPublicationPublishBoolean*(l: HelicsLibrary, pub: HelicsPublication, val: HelicsBool) =
   loadSym("helicsPublicationPublishBoolean")
   let err = l.helicsErrorInitialize()
   f(pub, val, unsafeAddr err)
@@ -4480,7 +4511,7 @@ proc helicsPublicationPublishBoolean*(l: HelicsLibrary, pub: HelicsPublication, 
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsPublicationPublishDouble*(l: HelicsLibrary, pub: HelicsPublication, val: float, err: ptr HelicsError) =
+proc helicsPublicationPublishDouble*(l: HelicsLibrary, pub: HelicsPublication, val: float) =
   loadSym("helicsPublicationPublishDouble")
   let err = l.helicsErrorInitialize()
   f(pub, val.cdouble, unsafeAddr err)
@@ -4496,7 +4527,7 @@ proc helicsPublicationPublishDouble*(l: HelicsLibrary, pub: HelicsPublication, v
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsPublicationPublishTime*(l: HelicsLibrary, pub: HelicsPublication, val: HelicsTime, err: ptr HelicsError) =
+proc helicsPublicationPublishTime*(l: HelicsLibrary, pub: HelicsPublication, val: HelicsTime) =
   loadSym("helicsPublicationPublishTime")
   let err = l.helicsErrorInitialize()
   f(pub, val, unsafeAddr err)
@@ -4512,7 +4543,7 @@ proc helicsPublicationPublishTime*(l: HelicsLibrary, pub: HelicsPublication, val
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsPublicationPublishChar*(l: HelicsLibrary, pub: HelicsPublication, val: char, err: ptr HelicsError) =
+proc helicsPublicationPublishChar*(l: HelicsLibrary, pub: HelicsPublication, val: char) =
   loadSym("helicsPublicationPublishChar")
   let err = l.helicsErrorInitialize()
   f(pub, val.cchar, unsafeAddr err)
@@ -4529,7 +4560,7 @@ proc helicsPublicationPublishChar*(l: HelicsLibrary, pub: HelicsPublication, val
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsPublicationPublishComplex*(l: HelicsLibrary, pub: HelicsPublication, real: float, imag: float, err: ptr HelicsError) =
+proc helicsPublicationPublishComplex*(l: HelicsLibrary, pub: HelicsPublication, real: float, imag: float) =
   loadSym("helicsPublicationPublishComplex")
   let err = l.helicsErrorInitialize()
   f(pub, real.cdouble, imag.cdouble, unsafeAddr err)
@@ -4546,7 +4577,7 @@ proc helicsPublicationPublishComplex*(l: HelicsLibrary, pub: HelicsPublication, 
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsPublicationPublishVector*(l: HelicsLibrary, pub: HelicsPublication, vectorInput: ptr cdouble, vectorLength: int, err: ptr HelicsError) =
+proc helicsPublicationPublishVector*(l: HelicsLibrary, pub: HelicsPublication, vectorInput: ptr cdouble, vectorLength: int) =
   loadSym("helicsPublicationPublishVector")
   let err = l.helicsErrorInitialize()
   f(pub, vectorInput, vectorLength.cint, unsafeAddr err)
@@ -4563,7 +4594,7 @@ proc helicsPublicationPublishVector*(l: HelicsLibrary, pub: HelicsPublication, v
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsPublicationPublishNamedPoint*(l: HelicsLibrary, pub: HelicsPublication, str: string, val: float, err: ptr HelicsError) =
+proc helicsPublicationPublishNamedPoint*(l: HelicsLibrary, pub: HelicsPublication, str: string, val: float) =
   loadSym("helicsPublicationPublishNamedPoint")
   let err = l.helicsErrorInitialize()
   f(pub, str.cstring, val.cdouble, unsafeAddr err)
@@ -4579,7 +4610,7 @@ proc helicsPublicationPublishNamedPoint*(l: HelicsLibrary, pub: HelicsPublicatio
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsPublicationAddTarget*(l: HelicsLibrary, pub: HelicsPublication, target: string, err: ptr HelicsError) =
+proc helicsPublicationAddTarget*(l: HelicsLibrary, pub: HelicsPublication, target: string) =
   loadSym("helicsPublicationAddTarget")
   let err = l.helicsErrorInitialize()
   f(pub, target.cstring, unsafeAddr err)
@@ -4606,7 +4637,7 @@ proc helicsInputIsValid*(l: HelicsLibrary, ipt: HelicsInput): HelicsBool =
 #  * @param[in,out] err A pointer to an error object for catching errors.
 #  * @endforcpponly
 #
-proc helicsInputAddTarget*(l: HelicsLibrary, ipt: HelicsInput, target: string, err: ptr HelicsError) =
+proc helicsInputAddTarget*(l: HelicsLibrary, ipt: HelicsInput, target: string) =
   loadSym("helicsInputAddTarget")
   let err = l.helicsErrorInitialize()
   f(ipt, target.cstring, unsafeAddr err)
@@ -4644,7 +4675,7 @@ proc helicsInputGetRawValueSize*(l: HelicsLibrary, ipt: HelicsInput): int =
 #  * @return Raw string data.
 #  * @endPythonOnly
 #
-proc helicsInputGetRawValue*(l: HelicsLibrary, ipt: HelicsInput, data: pointer, maxDatalen: int, actualSize: ptr cint, err: ptr HelicsError) =
+proc helicsInputGetRawValue*(l: HelicsLibrary, ipt: HelicsInput, data: pointer, maxDatalen: int, actualSize: ptr cint) =
   loadSym("helicsInputGetRawValue")
   let err = l.helicsErrorInitialize()
   f(ipt, data, maxDatalen.cint, actualSize, unsafeAddr err)
@@ -4675,7 +4706,7 @@ proc helicsInputGetStringSize*(l: HelicsLibrary, ipt: HelicsInput): int =
 #  * @return A string data
 #  * @endPythonOnly
 #
-proc helicsInputGetString*(l: HelicsLibrary, ipt: HelicsInput, outputString: string, maxStringLen: int, actualLength: ptr cint, err: ptr HelicsError) =
+proc helicsInputGetString*(l: HelicsLibrary, ipt: HelicsInput, outputString: string, maxStringLen: int, actualLength: ptr cint) =
   loadSym("helicsInputGetString")
   let err = l.helicsErrorInitialize()
   f(ipt, outputString, maxStringLen.cint, actualLength, unsafeAddr err)
@@ -4692,7 +4723,7 @@ proc helicsInputGetString*(l: HelicsLibrary, ipt: HelicsInput, outputString: str
 #  *
 #  * @return An int64_t value with the current value of the input.
 #
-proc helicsInputGetInteger*(l: HelicsLibrary, ipt: HelicsInput, err: ptr HelicsError): int64 =
+proc helicsInputGetInteger*(l: HelicsLibrary, ipt: HelicsInput): int64 =
   loadSym("helicsInputGetInteger")
   let err = l.helicsErrorInitialize()
   result = f(ipt, unsafeAddr err)
@@ -4709,7 +4740,7 @@ proc helicsInputGetInteger*(l: HelicsLibrary, ipt: HelicsInput, err: ptr HelicsE
 #  *
 #  * @return A boolean value of current input value.
 #
-proc helicsInputGetBoolean*(l: HelicsLibrary, ipt: HelicsInput, err: ptr HelicsError): HelicsBool =
+proc helicsInputGetBoolean*(l: HelicsLibrary, ipt: HelicsInput): HelicsBool =
   loadSym("helicsInputGetBoolean")
   let err = l.helicsErrorInitialize()
   result = f(ipt, unsafeAddr err)
@@ -4726,7 +4757,7 @@ proc helicsInputGetBoolean*(l: HelicsLibrary, ipt: HelicsInput, err: ptr HelicsE
 #  *
 #  * @return The double value of the input.
 #
-proc helicsInputGetDouble*(l: HelicsLibrary, ipt: HelicsInput, err: ptr HelicsError): float =
+proc helicsInputGetDouble*(l: HelicsLibrary, ipt: HelicsInput): float =
   loadSym("helicsInputGetDouble")
   let err = l.helicsErrorInitialize()
   result = f(ipt, unsafeAddr err).float
@@ -4743,7 +4774,7 @@ proc helicsInputGetDouble*(l: HelicsLibrary, ipt: HelicsInput, err: ptr HelicsEr
 #  *
 #  * @return The resulting time value.
 #
-proc helicsInputGetTime*(l: HelicsLibrary, ipt: HelicsInput, err: ptr HelicsError): HelicsTime =
+proc helicsInputGetTime*(l: HelicsLibrary, ipt: HelicsInput): HelicsTime =
   loadSym("helicsInputGetTime")
   let err = l.helicsErrorInitialize()
   result = f(ipt, unsafeAddr err)
@@ -4763,7 +4794,7 @@ proc helicsInputGetTime*(l: HelicsLibrary, ipt: HelicsInput, err: ptr HelicsErro
 #  *         NAK (negative acknowledgment) symbol returned on error
 #  * @endforcpponly
 #
-proc helicsInputGetChar*(l: HelicsLibrary, ipt: HelicsInput, err: ptr HelicsError): char =
+proc helicsInputGetChar*(l: HelicsLibrary, ipt: HelicsInput): char =
   loadSym("helicsInputGetChar")
   let err = l.helicsErrorInitialize()
   result = f(ipt, unsafeAddr err).char
@@ -4781,7 +4812,7 @@ proc helicsInputGetChar*(l: HelicsLibrary, ipt: HelicsInput, err: ptr HelicsErro
 #  *
 #  * @return A helics_complex structure with the value.
 #
-proc helicsInputGetComplexObject*(l: HelicsLibrary, ipt: HelicsInput, err: ptr HelicsError): HelicsComplex =
+proc helicsInputGetComplexObject*(l: HelicsLibrary, ipt: HelicsInput): HelicsComplex =
   loadSym("helicsInputGetComplexObject")
   let err = l.helicsErrorInitialize()
   result = f(ipt, unsafeAddr err)
@@ -4803,7 +4834,7 @@ proc helicsInputGetComplexObject*(l: HelicsLibrary, ipt: HelicsInput, err: ptr H
 #  * @return a pair of floating point values that represent the real and imag values
 #  * @endPythonOnly
 #
-proc helicsInputGetComplex*(l: HelicsLibrary, ipt: HelicsInput, real: ptr cdouble, imag: ptr cdouble, err: ptr HelicsError) =
+proc helicsInputGetComplex*(l: HelicsLibrary, ipt: HelicsInput, real: ptr cdouble, imag: ptr cdouble) =
   loadSym("helicsInputGetComplex")
   let err = l.helicsErrorInitialize()
   f(ipt, real, imag, unsafeAddr err)
@@ -4859,7 +4890,7 @@ proc helicsInputGetVectorSize*(l: HelicsLibrary, ipt: HelicsInput): int =
 #  * @return a string and a double value for the named point
 #  * @endPythonOnly
 #
-proc helicsInputGetNamedPoint*(l: HelicsLibrary, ipt: HelicsInput, outputString: string, maxStringLen: int, actualLength: ptr cint, val: ptr cdouble, err: ptr HelicsError) =
+proc helicsInputGetNamedPoint*(l: HelicsLibrary, ipt: HelicsInput, outputString: string, maxStringLen: int, actualLength: ptr cint, val: ptr cdouble) =
   loadSym("helicsInputGetNamedPoint")
   let err = l.helicsErrorInitialize()
   f(ipt, outputString.cstring, maxStringLen.cint, actualLength, val, unsafeAddr err)
@@ -4882,7 +4913,7 @@ proc helicsInputGetNamedPoint*(l: HelicsLibrary, ipt: HelicsInput, outputString:
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsInputSetDefaultRaw*(l: HelicsLibrary, ipt: HelicsInput, data: pointer, inputDataLength: int, err: ptr HelicsError) =
+proc helicsInputSetDefaultRaw*(l: HelicsLibrary, ipt: HelicsInput, data: pointer, inputDataLength: int) =
   loadSym("helicsInputSetDefaultRaw")
   let err = l.helicsErrorInitialize()
   f(ipt, data, inputDataLength.cint, unsafeAddr err)
@@ -4898,7 +4929,7 @@ proc helicsInputSetDefaultRaw*(l: HelicsLibrary, ipt: HelicsInput, data: pointer
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsInputSetDefaultString*(l: HelicsLibrary, ipt: HelicsInput, str: string, err: ptr HelicsError) =
+proc helicsInputSetDefaultString*(l: HelicsLibrary, ipt: HelicsInput, str: string) =
   loadSym("helicsInputSetDefaultString")
   let err = l.helicsErrorInitialize()
   f(ipt, str.cstring, unsafeAddr err)
@@ -4914,7 +4945,7 @@ proc helicsInputSetDefaultString*(l: HelicsLibrary, ipt: HelicsInput, str: strin
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsInputSetDefaultInteger*(l: HelicsLibrary, ipt: HelicsInput, val: int64, err: ptr HelicsError) =
+proc helicsInputSetDefaultInteger*(l: HelicsLibrary, ipt: HelicsInput, val: int64) =
   loadSym("helicsInputSetDefaultInteger")
   let err = l.helicsErrorInitialize()
   f(ipt, val, unsafeAddr err)
@@ -4930,7 +4961,7 @@ proc helicsInputSetDefaultInteger*(l: HelicsLibrary, ipt: HelicsInput, val: int6
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsInputSetDefaultBoolean*(l: HelicsLibrary, ipt: HelicsInput, val: HelicsBool, err: ptr HelicsError) =
+proc helicsInputSetDefaultBoolean*(l: HelicsLibrary, ipt: HelicsInput, val: HelicsBool) =
   loadSym("helicsInputSetDefaultBoolean")
   let err = l.helicsErrorInitialize()
   f(ipt, val, unsafeAddr err)
@@ -4946,7 +4977,7 @@ proc helicsInputSetDefaultBoolean*(l: HelicsLibrary, ipt: HelicsInput, val: Heli
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsInputSetDefaultTime*(l: HelicsLibrary, ipt: HelicsInput, val: HelicsTime, err: ptr HelicsError) =
+proc helicsInputSetDefaultTime*(l: HelicsLibrary, ipt: HelicsInput, val: HelicsTime) =
   loadSym("helicsInputSetDefaultTime")
   let err = l.helicsErrorInitialize()
   f(ipt, val, unsafeAddr err)
@@ -4962,7 +4993,7 @@ proc helicsInputSetDefaultTime*(l: HelicsLibrary, ipt: HelicsInput, val: HelicsT
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsInputSetDefaultChar*(l: HelicsLibrary, ipt: HelicsInput, val: char, err: ptr HelicsError) =
+proc helicsInputSetDefaultChar*(l: HelicsLibrary, ipt: HelicsInput, val: char) =
   loadSym("helicsInputSetDefaultChar")
   let err = l.helicsErrorInitialize()
   f(ipt, val.cchar, unsafeAddr err)
@@ -4978,7 +5009,7 @@ proc helicsInputSetDefaultChar*(l: HelicsLibrary, ipt: HelicsInput, val: char, e
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsInputSetDefaultDouble*(l: HelicsLibrary, ipt: HelicsInput, val: float, err: ptr HelicsError) =
+proc helicsInputSetDefaultDouble*(l: HelicsLibrary, ipt: HelicsInput, val: float) =
   loadSym("helicsInputSetDefaultDouble")
   let err = l.helicsErrorInitialize()
   f(ipt, val, unsafeAddr err)
@@ -4995,7 +5026,7 @@ proc helicsInputSetDefaultDouble*(l: HelicsLibrary, ipt: HelicsInput, val: float
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsInputSetDefaultComplex*(l: HelicsLibrary, ipt: HelicsInput, real: float, imag: float, err: ptr HelicsError) =
+proc helicsInputSetDefaultComplex*(l: HelicsLibrary, ipt: HelicsInput, real: float, imag: float) =
   loadSym("helicsInputSetDefaultComplex")
   let err = l.helicsErrorInitialize()
   f(ipt, real.cdouble, imag.cdouble, unsafeAddr err)
@@ -5012,7 +5043,7 @@ proc helicsInputSetDefaultComplex*(l: HelicsLibrary, ipt: HelicsInput, real: flo
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsInputSetDefaultVector*(l: HelicsLibrary, ipt: HelicsInput, vectorInput: ptr cdouble, vectorLength: int, err: ptr HelicsError) =
+proc helicsInputSetDefaultVector*(l: HelicsLibrary, ipt: HelicsInput, vectorInput: ptr cdouble, vectorLength: int) =
   loadSym("helicsInputSetDefaultVector")
   let err = l.helicsErrorInitialize()
   f(ipt, vectorInput, vectorLength.cint, unsafeAddr err)
@@ -5029,7 +5060,7 @@ proc helicsInputSetDefaultVector*(l: HelicsLibrary, ipt: HelicsInput, vectorInpu
 #  * @param[in,out] err An error object that will contain an error code and string if any error occurred during the execution of the function.
 #  * @endforcpponly
 #
-proc helicsInputSetDefaultNamedPoint*(l: HelicsLibrary, ipt: HelicsInput, str: string, val: float, err: ptr HelicsError) =
+proc helicsInputSetDefaultNamedPoint*(l: HelicsLibrary, ipt: HelicsInput, str: string, val: float) =
   loadSym("helicsInputSetDefaultNamedPoint")
   let err = l.helicsErrorInitialize()
   f(ipt, str.cstring, val.cdouble, unsafeAddr err)
@@ -5173,7 +5204,7 @@ proc helicsInputGetInfo*(l: HelicsLibrary, inp: HelicsInput): string =
 #  * @param[in,out] err An error object to fill out in case of an error.
 #  * @endforcpponly
 #
-proc helicsInputSetInfo*(l: HelicsLibrary, inp: HelicsInput, info: string, err: ptr HelicsError) =
+proc helicsInputSetInfo*(l: HelicsLibrary, inp: HelicsInput, info: string) =
   loadSym("helicsInputSetInfo")
   let err = l.helicsErrorInitialize()
   f(inp, info, unsafeAddr err)
@@ -5200,7 +5231,7 @@ proc helicsPublicationGetInfo*(l: HelicsLibrary, pub: HelicsPublication): string
 #  * @param[in,out] err An error object to fill out in case of an error.
 #  * @endforcpponly
 #
-proc helicsPublicationSetInfo*(l: HelicsLibrary, pub: HelicsPublication, info: string, err: ptr HelicsError) =
+proc helicsPublicationSetInfo*(l: HelicsLibrary, pub: HelicsPublication, info: string) =
   loadSym("helicsPublicationSetInfo")
   let err = l.helicsErrorInitialize()
   f(pub, info.cstring, unsafeAddr err)
@@ -5229,7 +5260,7 @@ proc helicsInputGetOption*(l: HelicsLibrary, inp: HelicsInput, option: int): int
 #  * @param[in,out] err An error object to fill out in case of an error.
 #  * @endforcpponly
 #
-proc helicsInputSetOption*(l: HelicsLibrary, inp: HelicsInput, option: int, value: int, err: ptr HelicsError) =
+proc helicsInputSetOption*(l: HelicsLibrary, inp: HelicsInput, option: int, value: int) =
   loadSym("helicsInputSetOption")
   let err = l.helicsErrorInitialize()
   f(inp, option.cint, value.cint, unsafeAddr err)
@@ -5258,7 +5289,7 @@ proc helicsPublicationGetOption*(l: HelicsLibrary, pub: HelicsPublication, optio
 #  * @param[in,out] err An error object to fill out in case of an error.
 #  * @endforcpponly
 #
-proc helicsPublicationSetOption*(l: HelicsLibrary, pub: HelicsPublication, option: int, val: cint, err: ptr HelicsError) =
+proc helicsPublicationSetOption*(l: HelicsLibrary, pub: HelicsPublication, option: int, val: int) =
   loadSym("helicsPublicationSetOption")
   let err = l.helicsErrorInitialize()
   f(pub, option.cint, val.cint, unsafeAddr err)
@@ -5274,7 +5305,7 @@ proc helicsPublicationSetOption*(l: HelicsLibrary, pub: HelicsPublication, optio
 #  * @param[in,out] err An error object to fill out in case of an error.
 #  * @endforcpponly
 #
-proc helicsPublicationSetMinimumChange*(l: HelicsLibrary, pub: HelicsPublication, tolerance: float, err: ptr HelicsError) =
+proc helicsPublicationSetMinimumChange*(l: HelicsLibrary, pub: HelicsPublication, tolerance: float) =
   loadSym("helicsPublicationSetMinimumChange")
   let err = l.helicsErrorInitialize()
   f(pub, tolerance.cdouble, unsafeAddr err)
@@ -5290,7 +5321,7 @@ proc helicsPublicationSetMinimumChange*(l: HelicsLibrary, pub: HelicsPublication
 #  * @param[in,out] err An error object to fill out in case of an error.
 #  * @endforcpponly
 #
-proc helicsInputSetMinimumChange*(l: HelicsLibrary, inp: HelicsInput, tolerance: float, err: ptr HelicsError) =
+proc helicsInputSetMinimumChange*(l: HelicsLibrary, inp: HelicsInput, tolerance: float) =
   loadSym("helicsInputSetMinimumChange")
   let err = l.helicsErrorInitialize()
   f(inp, tolerance.cdouble, unsafeAddr err)
