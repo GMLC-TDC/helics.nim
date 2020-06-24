@@ -5383,4 +5383,4 @@ proc loadHelicsLibrary*(filename: string): HelicsLibrary =
     return
 
   echo path
-  raise newException(ValueError, "Could not load library. Make sure that the `HELICS_INSTALL` environment variable points to the folder where there is a lib folder containing the helics shared library.")
+  raise newException(ValueError, "Could not load the helics shared library. Make sure that the `HELICS_INSTALL` environment variable points to the helics installation folder. Check the documentation for more information.")
