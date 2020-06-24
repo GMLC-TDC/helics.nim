@@ -752,7 +752,7 @@ macro loadSym(sym: string): untyped =
 # *
 #  * Get a version string for HELICS.
 #
-proc helicsGetVersion(l: HelicsLibrary): string =
+proc helicsGetVersion*(l: HelicsLibrary): string =
   loadSym("helicsGetVersion")
   result = $(f())
 
@@ -5371,8 +5371,16 @@ proc helicsFederateGetInputCount*(l: HelicsLibrary, fed: HelicsFederate): int =
   result = f(fed).int
 
 
-proc loadHelicsLibrary(path: string): HelicsLibrary =
+proc loadHelicsLibrary*(filename: string): HelicsLibrary =
   result = HelicsLibrary()
-  result.lib = loadLib(path)
-  if result.lib == nil:
-    raise newException(ValueError, "couldn't load library: " & path)
+  result.lib = loadLibPattern(filename)
+  if result.lib != nil:
+    return
+
+  let path = joinpath(getEnv("HELICS_INSTALL"), "lib", filename)
+  result.lib = loadLibPattern(path)
+  if result.lib != nil:
+    return
+
+  echo path
+  raise newException(ValueError, "Could not load library. Make sure that the `HELICS_INSTALL` environment variable points to the folder where there is a lib folder containing the helics shared library.")
