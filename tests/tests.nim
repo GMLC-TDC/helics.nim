@@ -1,10 +1,11 @@
-import ../helics/private/helics
+import ../helics
 
 when isMainModule:
   import unittest
 
   suite "test get version":
 
+    let l = loadHelicsLibrary("libhelicsSharedLib(|.2.5.2|.2.5.1|.2.5.0).dylib")
     test "version":
       check:
-        helicsGetVersion() == "2.4.2 (2020-03-27)"
+        l.helicsGetVersion() == "2.5.2 (2020-06-14)"
