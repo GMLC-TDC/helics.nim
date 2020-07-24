@@ -3867,7 +3867,7 @@ proc helicsFederateGetFilterByIndex*(l: HelicsLibrary, fed: HelicsFederate, inde
 #
 proc helicsFilterIsValid*(l: HelicsLibrary, filt: HelicsFilter): HelicsBool =
   loadSym("helicsFilterIsValid")
-  f(filt)
+  result = f(filt)
 
 # *
 #  * Get the name of the filter and store in the given string.
