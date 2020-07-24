@@ -4626,7 +4626,7 @@ proc helicsPublicationAddTarget*(l: HelicsLibrary, pub: HelicsPublication, targe
 #
 proc helicsInputIsValid*(l: HelicsLibrary, ipt: HelicsInput): HelicsBool =
   loadSym("helicsInputIsValid")
-  f(ipt)
+  result = f(ipt)
 
 # *
 #  * Add a publication to the list of data that an input subscribes to.
