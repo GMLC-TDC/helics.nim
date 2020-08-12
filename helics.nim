@@ -5377,10 +5377,15 @@ proc loadHelicsLibrary*(filename: string): HelicsLibrary =
   if result.lib != nil:
     return
 
-  let path = joinpath(getEnv("HELICS_INSTALL"), "lib", filename)
+  let path = joinpath(getEnv("HELICS_INSTALL"), "lib", filename) # *nix installs place .so and .dynlib files in lib
   result.lib = loadLibPattern(path)
   if result.lib != nil:
     return
 
-  echo path
+  let bin_path = joinpath(getEnv("HELICS_INSTALL"), "bin", filename) # Windows installs place dll files in bin
+  result.lib = loadLibPattern(bin_path)
+  if result.lib != nil:
+    return
+
+  echo &"Unable to locate helics shared library.\r\nLocations searched: {path} & {bin_path}"
   raise newException(ValueError, "Could not load the helics shared library. Make sure that the `HELICS_INSTALL` environment variable points to the helics installation folder. Check the documentation for more information.")
