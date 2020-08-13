@@ -10,6 +10,7 @@ else:
   import dynlib
 import macros
 import os
+import strformat
 
 const helics_install_path = getEnv("HELICS_INSTALL")
 
